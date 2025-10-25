@@ -1,0 +1,34 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# Recommended: use Ninja for fast builds
+if(NOT CMAKE_GENERATOR)
+  message(STATUS "No generator specified; prefer Ninja for fast builds.")
+endif()
+
+option(DEBUG "Build with debug configuration" OFF)
+
+if (NOT DEBUG)
+  # Compiler warnings (MSVC/GNU/Clang)
+  if (MSVC)
+    add_compile_options(/W4 /permissive-)
+  else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+  endif()
+
+  # Linker warnings (MSVC/GNU/Clang)
+  if (MSVC)
+    add_link_options(/WX)
+  else()
+    add_link_options(-Wl,--fatal-warnings)
+  endif()
+else()
+  message(STATUS "Debug mode: compiler warnings are disabled.")
+endif()
+
+project(d-chat VERSION 0.1 LANGUAGES CXX)
+
+add_executable(d-chat_daemon src/daemon.cpp)
