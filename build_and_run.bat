@@ -62,7 +62,7 @@ if errorlevel 1 (
 )
 
 echo.
-set "EXEC_PATH=%BUILD_DIR%\%PROJECT_NAME%_daemon.exe"
+set "EXEC_PATH=%BUILD_DIR%\src\app\%PROJECT_NAME%_main.exe"
 if exist "%EXEC_PATH%" (
   echo [STEP] Running "%EXEC_PATH%"
   echo.
@@ -71,8 +71,8 @@ if exist "%EXEC_PATH%" (
 )
 
 echo [WARN] Executable not found. Looked for:
-echo   %BUILD_DIR%\%PROJECT_NAME%_daemon.exe
-echo   %BUILD_DIR%\%BUILD_TYPE%\%PROJECT_NAME%_daemon.exe
+echo   %BUILD_DIR%\src\app\%PROJECT_NAME%_main.exe
+echo   %BUILD_DIR%\src\app\%BUILD_TYPE%\%PROJECT_NAME%_main.exe
 echo [INFO] Build succeeded but executable could not be located automatically.
 goto :end
 

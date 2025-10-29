@@ -26,9 +26,11 @@ if (NOT DEBUG)
     add_link_options(-Wl,--fatal-warnings)
   endif()
 else()
+  set(CMAKE_BUILD_TYPE Debug) 
   message(STATUS "Debug mode: compiler warnings are disabled.")
 endif()
 
 project(d-chat VERSION 0.1 LANGUAGES CXX)
 
-add_executable(d-chat_daemon src/daemon.cpp)
+add_subdirectory(src/infra)
+add_subdirectory(src/app)
