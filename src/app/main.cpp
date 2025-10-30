@@ -1,48 +1,33 @@
-#include <iostream>
+#include "ChatApplication.hpp"
 
-#include "SocketClient.hpp"
-#include "SocketServer.hpp"
+// todo
+// src/shared/db/DatabaseConnection.cpp - сервис подключения к бд, аппаратная реализация
+// src/domain/messages/IMessageRepository.hpp - интерфейс репозитория сообщений
+// src/infra/messages/MessageRepository.cpp - реализация репозитория сообщений
+// + бизнес сущности и dto для MessageRepository
+
+// src/service/crypto/Cryptography.cpp - сервис шифрования, аппаратная реализация
+// src/domain/crypto/EncryptionService.cpp - бизнес логика шифрования сообщений
+// + бизнес сущности и dto для EncryptionService
+
+// src/shared/network/SocketServer.cpp - сервис сервера на сокетах, "аппаратная" реализация
+// src/domain/chat/ChatService.cpp - бизнес логика приложения, работа с бд (MessageRepository),
+// crypto (EncryptionService) и тд
+// + бизнес сущности и dto для ChatService
+// src/domain/chat/IChatServer.hpp - абстрактный интерфейс сервера чата
+// src/infra/chat/ChatServer.cpp - реализация сервера чата, доступ к бизнес логике только через
+// ChatService
+
+// src/shared/network/SocketClient.cpp - сервис tcp клиента, "аппаратная" реализация
+// src/domain/chat/IChatClient.hpp - абстрактный интерфейс клиента чата (без бд и crypto)
+// src/infra/chat/ChatClient.hpp - абстрактный интерфейс клиента чата (без бд и crypto)
 
 int main()
 {
-    // заблокировать конструктор копирования, оператор присваивания
+    ChatApplication app;
 
-    setlocale(LC_ALL, "ru_RU.UTF-8");
-    std::cout << "Echo сервер" << std::endl;
-    std::cout << "Введите порт: ";
-
-    int port;
-    std::cin >> port;
-
-    SocketServer server(port);
-    server.start(
-        [](const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)
-        {
-            sendCallback(std::string(buffer, bufferSize));
-            std::cout << "Получено новое сообщение: " << buffer << std::endl;
-        });
-    std::cout << "Сервер запущен в фоне" << std::endl;
-
-    std::cout << "Чат готов к работе!" << std::endl;
-    std::cout << "Введите порт клиента: ";
-    std::cin >> port;
-
-    std::cout << "Объект клиента успешно создан" << std::endl;
-
-    while (true)
-    {
-        std::string message;
-
-        std::cout << "Введите сообщение: ";
-        std::cin >> message;
-
-        SocketClient client("127.0.0.1", port);
-
-        client.sendMessage(message);
-        std::cout << "Отправлено сообщение: " << message << std::endl;
-
-        std::cout << "Получено сообщение: " << client.receiveMessage() << std::endl;
-    }
+    app.init();
+    app.run();
 
     return 0;
 }

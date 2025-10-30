@@ -50,7 +50,7 @@ void SocketServer::listenMessages(MessageHandler onMessage)
     }
 }
 
-SocketServer::SocketServer(int port)
+SocketServer::SocketServer(unsigned short port)
 {
     // init winsock2.dll
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -86,7 +86,37 @@ SocketServer::~SocketServer()
     WSACleanup();
 }
 
-bool SocketServer::start(MessageHandler onMessage)
+SocketServer::SocketServer(SocketServer&& other) noexcept
+    : wsaData(other.wsaData),
+      listenSocket(other.listenSocket),
+      serverAddr(other.serverAddr),
+      isListening(other.isListening.load(std::memory_order_relaxed))
+{
+    if (other.listenThread.joinable()) other.listenThread.detach();
+
+    other.listenSocket = INVALID_SOCKET;
+    other.isListening.store(false, std::memory_order_relaxed);
+}
+
+SocketServer& SocketServer::operator=(SocketServer&& other) noexcept
+{
+    if (this != &other)
+    {
+        stop();
+
+        if (listenThread.joinable()) listenThread.detach();
+
+        listenSocket = other.listenSocket;
+        serverAddr = other.serverAddr;
+        isListening.store(other.isListening.load(std::memory_order_relaxed));
+
+        other.listenSocket = INVALID_SOCKET;
+        other.isListening.store(false, std::memory_order_relaxed);
+    }
+    return *this;
+}
+
+bool SocketServer::startAsync(MessageHandler onMessage)
 {
     if (!isListening.load(std::memory_order_relaxed))
     {
@@ -105,3 +135,5 @@ void SocketServer::stop()
 }
 
 bool SocketServer::listening() const { return isListening.load(std::memory_order_relaxed); }
+
+unsigned short SocketServer::getPort() const { return ntohs(serverAddr.sin_port); }

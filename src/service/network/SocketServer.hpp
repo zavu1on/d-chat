@@ -25,13 +25,19 @@ protected:
     SOCKET listenSocket;
     sockaddr_in serverAddr;
     std::thread listenThread;
-    std::atomic<bool> isListening;
+    std::atomic<bool> isListening;  // atomic to avoid race conditions
 
 public:
-    explicit SocketServer(int port);
+    explicit SocketServer(unsigned short port);
     ~SocketServer();
 
-    bool start(MessageHandler onMessage);
+    SocketServer(const SocketServer&) = delete;
+    SocketServer& operator=(const SocketServer&) = delete;
+    SocketServer(SocketServer&& other) noexcept;
+    SocketServer& operator=(SocketServer&& other) noexcept;
+
+    bool startAsync(MessageHandler onMessage);
     void stop();
     bool listening() const;
+    unsigned short getPort() const;
 };
