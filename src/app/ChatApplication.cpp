@@ -4,6 +4,8 @@ ChatApplication::~ChatApplication() { shutdown(); }
 
 void ChatApplication::init()
 {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
     setlocale(LC_ALL, "ru_RU.UTF-8");
     std::cout << "=== Echo сервер ===" << std::endl;
 

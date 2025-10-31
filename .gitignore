@@ -44,4 +44,5 @@
 build
 
 # idea
+.idea
 .vscode

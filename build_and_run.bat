@@ -6,6 +6,10 @@ set "BUILD_DIR=build"
 set "TOOLCHAIN_PATH=C:\Program Files\vcpkg\scripts\buildsystems\vcpkg.cmake"
 set "GENERATOR=Ninja"
 
+set "MINGW_PATH=C:\msys64\mingw64\bin"
+set "CC=%MINGW_PATH%\gcc.exe"
+set "CXX=%MINGW_PATH%\g++.exe"
+
 if "%~1"=="" goto :use_default
 
 set "ARG=%~1"
@@ -46,12 +50,18 @@ if not exist "%BUILD_DIR%" (
   )
 )
 
-echo [STEP] Configuring with CMake...
-cmake -S . -B "%BUILD_DIR%" -G "%GENERATOR%" -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN_PATH%" %EXTRA_CMAKE_ARGS%
+echo [STEP] Configuring with CMake (using MinGW)...
+cmake -S . -B "%BUILD_DIR%" ^
+  -G "%GENERATOR%" ^
+  -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN_PATH%" ^
+  -DCMAKE_C_COMPILER="%CC%" ^
+  -DCMAKE_CXX_COMPILER="%CXX%" ^
+  %EXTRA_CMAKE_ARGS%
 if errorlevel 1 (
   echo [ERROR] CMake configuration failed.
   exit /b 1
 )
+
 
 echo.
 echo [STEP] Building...

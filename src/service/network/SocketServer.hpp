@@ -8,8 +8,6 @@
 #include <stdexcept>
 #include <thread>
 
-#pragma comment(lib, "ws2_32.lib")
-
 const int BUFFER_SIZE = 512;
 
 class SocketServer
