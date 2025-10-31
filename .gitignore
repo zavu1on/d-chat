@@ -46,3 +46,6 @@ build
 # idea
 .idea
 .vscode
+
+# vcpkg
+vcpkg_installed

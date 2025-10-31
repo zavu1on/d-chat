@@ -26,6 +26,11 @@ int main()
 {
     ChatApplication app;
 
+    // todo add crypto
+    // todo add db and all entities
+    // todo complete CLI version
+    // todo add ui
+
     app.init();
     app.run();
 

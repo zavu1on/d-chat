@@ -56,6 +56,7 @@ cmake -S . -B "%BUILD_DIR%" ^
   -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN_PATH%" ^
   -DCMAKE_C_COMPILER="%CC%" ^
   -DCMAKE_CXX_COMPILER="%CXX%" ^
+  -DVCPKG_TARGET_TRIPLET=x64-windows ^
   %EXTRA_CMAKE_ARGS%
 if errorlevel 1 (
   echo [ERROR] CMake configuration failed.
