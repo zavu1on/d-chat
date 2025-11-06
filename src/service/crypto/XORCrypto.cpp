@@ -10,9 +10,6 @@
 // but for integrity (block hashing) we'll use OpenSSLCrypto if available.
 // NOTE: This XORCrypto is for demo; you already have OpenSSL implementation for production.
 
-namespace crypto
-{
-
 Bytes XORCrypto::sha256_bytes(const Bytes& data)
 {
     // fallback tiny hash: not secure; but used only in XORCrypto sign placeholder.
@@ -42,8 +39,8 @@ KeyPair XORCrypto::generateKeyPair()
     return kp;
 }
 
-std::string XORCrypto::keyToString(const Bytes& k) { return utils::to_hex(k); }
-Bytes XORCrypto::stringToKey(const std::string& s) { return utils::from_hex(s); }
+std::string XORCrypto::keyToString(const Bytes& k) { return to_hex(k); }
+Bytes XORCrypto::stringToKey(const std::string& s) { return from_hex(s); }
 
 Bytes XORCrypto::createSessionKey(const Bytes& privateKey, const Bytes& peerPublicKey)
 {
@@ -83,5 +80,3 @@ bool XORCrypto::verify(const Bytes& message, const Bytes& signature, const Bytes
     (void)publicKey;
     return signature.size() == 32;
 }
-
-}  // namespace crypto

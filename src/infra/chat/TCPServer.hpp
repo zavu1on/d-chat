@@ -9,7 +9,7 @@
 class TCPServer : public IChatServer
 {
 private:
-    network::SocketServer server;
+    SocketServer server;
     std::shared_ptr<ChatService> chatService;
 
 public:

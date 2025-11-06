@@ -3,10 +3,6 @@
 
 #include "Block.hpp"
 
-
-namespace blockchain
-{
-
 class Blockchain
 {
 public:
@@ -21,5 +17,3 @@ public:
 private:
     std::vector<Block> m_chain;
 };
-
-}  // namespace blockchain

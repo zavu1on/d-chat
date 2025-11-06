@@ -1,8 +1,5 @@
 #include "SocketServer.hpp"
 
-namespace network
-{
-
 void SocketServer::listenMessages(MessageHandler onMessage)
 {
     // listen max queued connections
@@ -139,4 +136,3 @@ void SocketServer::stop()
 bool SocketServer::listening() const { return isListening.load(std::memory_order_relaxed); }
 
 u_short SocketServer::getPort() const { return ntohs(serverAddr.sin_port); }
-}  // namespace network

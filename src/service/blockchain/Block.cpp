@@ -6,9 +6,6 @@
 
 #include "hex.hpp"
 
-namespace blockchain
-{
-
 std::string Block::toStringForHash() const
 {
     std::ostringstream oss;
@@ -22,7 +19,5 @@ void Block::computeHash()
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256(reinterpret_cast<const unsigned char*>(body.data()), body.size(), digest);
     std::vector<uint8_t> v(digest, digest + SHA256_DIGEST_LENGTH);
-    hash = utils::to_hex(v);
+    hash = to_hex(v);
 }
-
-}  // namespace blockchain

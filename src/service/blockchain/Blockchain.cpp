@@ -2,10 +2,6 @@
 
 #include <chrono>
 
-
-namespace blockchain
-{
-
 void Blockchain::addBlock(Block b)
 {
     if (!m_chain.empty())
@@ -32,5 +28,3 @@ bool Blockchain::verifyChain() const
     }
     return true;
 }
-
-}  // namespace blockchain

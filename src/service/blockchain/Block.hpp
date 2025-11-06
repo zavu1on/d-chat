@@ -2,10 +2,6 @@
 #include <cstdint>
 #include <string>
 
-
-namespace blockchain
-{
-
 struct Block
 {
     std::string previousHash;  // hex
@@ -18,5 +14,3 @@ struct Block
     std::string toStringForHash() const;  // canonical serialization for hashing
     void computeHash();                   // compute hash via OpenSSL SHA256
 };
-
-}  // namespace blockchain

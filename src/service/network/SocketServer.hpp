@@ -8,8 +8,6 @@
 #include <stdexcept>
 #include <thread>
 
-namespace network
-{
 const int BUFFER_SIZE = 512;
 
 class SocketServer
@@ -41,4 +39,3 @@ public:
     bool listening() const;
     u_short getPort() const;
 };
-}  // namespace network

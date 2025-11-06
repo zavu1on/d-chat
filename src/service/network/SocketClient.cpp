@@ -4,8 +4,6 @@
 
 #include "SocketServer.hpp"
 
-namespace network
-{
 bool SocketClient::connectToServer()
 {
     clientSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -162,4 +160,3 @@ unsigned short SocketClient::findFreePort()
 
     return freePort;
 }
-}  // namespace network

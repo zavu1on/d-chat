@@ -47,7 +47,7 @@ void JsonConfig::generatedDefaultConfig()
     json jData;
 
     jData["host"] = "127.0.0.1";
-    jData["port"] = std::to_string(network::SocketClient::findFreePort());
+    jData["port"] = std::to_string(SocketClient::findFreePort());
     jData["public_key"] = "public_key_secret_123";    // todo gen
     jData["private_key"] = "private_key_secret_123";  // todo gen
     jData["name"] = jData["host"];

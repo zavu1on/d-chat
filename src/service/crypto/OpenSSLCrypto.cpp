@@ -13,9 +13,6 @@
 #include <stdexcept>
 #include <vector>
 
-namespace crypto
-{
-
 void OpenSSLCrypto::throwIf(bool cond, const char* msg)
 {
     if (cond) throw std::runtime_error(msg);
@@ -425,5 +422,3 @@ bool OpenSSLCrypto::verify(const Bytes& message, const Bytes& signature, const B
     EVP_PKEY_free(pkey);
     return rc == 1;
 }
-
-}  // namespace crypto

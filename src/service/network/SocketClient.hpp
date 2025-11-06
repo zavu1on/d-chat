@@ -5,8 +5,6 @@
 
 #include <string>
 
-namespace network
-{
 class SocketClient
 {
 protected:
@@ -40,4 +38,3 @@ public:
 
     static u_short findFreePort();
 };
-}  // namespace network

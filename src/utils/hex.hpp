@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-namespace utils
-{
 inline std::string to_hex(const std::vector<uint8_t>& data)
 {
     std::ostringstream oss;
@@ -25,4 +23,3 @@ inline std::vector<uint8_t> from_hex(const std::string& hex)
     }
     return out;
 }
-}  // namespace utils

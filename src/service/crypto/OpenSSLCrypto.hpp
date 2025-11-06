@@ -4,10 +4,6 @@
 #include "../utils/hex.hpp"
 #include "ICrypto.hpp"
 
-
-namespace crypto
-{
-
 class OpenSSLCrypto : public ICrypto
 {
 public:
@@ -41,5 +37,3 @@ private:
     // helper
     static void throwIf(bool cond, const char* msg);
 };
-
-}  // namespace crypto
