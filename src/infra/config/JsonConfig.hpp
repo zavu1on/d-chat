@@ -16,4 +16,7 @@ public:
 
     std::string get(ConfigField key) const override;
     void update(ConfigField key, const std::string& value) override;
+
+    bool isValid() const override;
+    void generatedDefaultConfig() override;
 };

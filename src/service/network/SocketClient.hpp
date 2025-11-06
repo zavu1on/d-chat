@@ -5,6 +5,8 @@
 
 #include <string>
 
+namespace network
+{
 class SocketClient
 {
 protected:
@@ -12,7 +14,7 @@ protected:
     SOCKET clientSocket;
     sockaddr_in serverAddr;
     std::string host;
-    unsigned short port;
+    u_short port;
     bool connected;
 
     bool connectToServer();
@@ -34,5 +36,8 @@ public:
     bool isConnected() const;
 
     std::string getHost() const;
-    unsigned short getPort() const;
+    u_short getPort() const;
+
+    static u_short findFreePort();
 };
+}  // namespace network

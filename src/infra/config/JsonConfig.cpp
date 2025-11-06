@@ -2,28 +2,19 @@
 
 #include <iostream>
 
+#include "SocketClient.hpp"
+
 JsonConfig::JsonConfig(const std::string& path) : jsonFile(path)
 {
     json jData = jsonFile.read();
 
-    for (json::iterator it = jData.begin(); it != jData.end(); ++it)
+    for (json::iterator iter = jData.begin(); iter != jData.end(); ++iter)
     {
-        std::string key = it.key();
-        std::string value = it.value().get<std::string>();
+        std::string key = iter.key();
+        std::string value = iter.value().get<std::string>();
 
-        if (key == "host")
-            data[ConfigField::HOST] = value;
-        else if (key == "port")
-            data[ConfigField::PORT] = value;
-        else if (key == "public_key")
-            data[ConfigField::PUBLIC_KEY] = value;
-        else if (key == "private_key")
-            data[ConfigField::PRIVATE_KEY] = value;
+        data[IConfig::stringToConfigField(key)] = value;
     }
-
-    if (!data.count(ConfigField::HOST) || !data.count(ConfigField::PORT) ||
-        !data.count(ConfigField::PUBLIC_KEY) || !data.count(ConfigField::PRIVATE_KEY))
-        throw std::runtime_error("Invalid config file");
 }
 
 std::string JsonConfig::get(ConfigField key) const { return data.at(key); }
@@ -31,6 +22,35 @@ std::string JsonConfig::get(ConfigField key) const { return data.at(key); }
 void JsonConfig::update(ConfigField key, const std::string& value)
 {
     data[key] = value;
+
+    std::map<std::string, std::string> writeData;
+    for (const auto& [k, v] : data)
+    {
+        writeData[IConfig::configFieldToString(k)] = v;
+    }
+
+    jsonFile.write(writeData);
+}
+
+bool JsonConfig::isValid() const
+{
+    for (const auto& key : CONFIG_FIELDS)
+    {
+        if (!data.count(key)) return false;
+    }
+
+    return true;
+}
+
+void JsonConfig::generatedDefaultConfig()
+{
+    json jData;
+
+    jData["host"] = "127.0.0.1";
+    jData["port"] = std::to_string(network::SocketClient::findFreePort());
+    jData["public_key"] = "public_key_secret_123";    // todo gen
+    jData["private_key"] = "private_key_secret_123";  // todo gen
+    jData["name"] = jData["host"];
 
     std::map<std::string, std::string> writeData;
     for (const auto& [key, value] : data)

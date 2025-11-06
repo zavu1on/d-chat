@@ -9,11 +9,11 @@
 class TCPServer : public IChatServer
 {
 private:
-    SocketServer server;
+    network::SocketServer server;
     std::shared_ptr<ChatService> chatService;
 
 public:
-    TCPServer(unsigned short port, const std::shared_ptr<ChatService>& chatService);
+    TCPServer(u_short port, const std::shared_ptr<ChatService>& chatService);
 
     void start() override;
     void stop() override;

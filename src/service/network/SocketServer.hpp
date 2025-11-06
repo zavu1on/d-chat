@@ -8,13 +8,15 @@
 #include <stdexcept>
 #include <thread>
 
+namespace network
+{
 const int BUFFER_SIZE = 512;
 
 class SocketServer
 {
 private:
-    using MessageHandler = std::function<void(
-        const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)>;
+    using MessageHandler =
+        std::function<void(const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)>;
 
     void listenMessages(MessageHandler onMessage);
 
@@ -26,7 +28,7 @@ protected:
     std::atomic<bool> isListening;  // atomic to avoid race conditions
 
 public:
-    explicit SocketServer(unsigned short port);
+    explicit SocketServer(u_short port);
     ~SocketServer();
 
     SocketServer(const SocketServer&) = delete;
@@ -37,5 +39,6 @@ public:
     bool startAsync(MessageHandler onMessage);
     void stop();
     bool listening() const;
-    unsigned short getPort() const;
+    u_short getPort() const;
 };
+}  // namespace network

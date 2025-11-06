@@ -1,6 +1,6 @@
 #include "TCPServer.hpp"
 
-TCPServer::TCPServer(unsigned short port, const std::shared_ptr<ChatService>& chatService)
+TCPServer::TCPServer(u_short port, const std::shared_ptr<ChatService>& chatService)
     : server(port), chatService(chatService)
 {
 }
@@ -8,8 +8,7 @@ TCPServer::TCPServer(unsigned short port, const std::shared_ptr<ChatService>& ch
 void TCPServer::start()
 {
     server.startAsync(
-        [this](const char* buffer, int bufferSize,
-               std::function<void(const std::string&)> sendCallback)
+        [this](const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)
         {
             std::string message(buffer, bufferSize);
             std::string response = chatService->handleIncoming(message);

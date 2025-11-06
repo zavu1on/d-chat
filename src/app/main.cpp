@@ -22,14 +22,38 @@
 // src/domain/chat/IChatClient.hpp - абстрактный интерфейс клиента чата (без бд и crypto)
 // src/infra/chat/ChatClient.hpp - абстрактный интерфейс клиента чата (без бд и crypto)
 
+#include "Block.hpp"
+#include "Blockchain.hpp"
+#include "OpenSSLCrypto.hpp"
+#include "XORCrypto.hpp"
+
 int main()
 {
     ChatApplication app;
 
-    // todo add crypto
     // todo add db and all entities
     // todo complete CLI version
     // todo add ui
+
+    try
+    {
+        crypto::OpenSSLCrypto openssl;
+        auto kp = openssl.generateKeyPair();
+
+        std::string pubPem = openssl.keyToString(kp.publicKey);
+        std::string privPem = openssl.keyToString(kp.privateKey);
+
+        std::cout << pubPem << std::endl;
+        std::cout << privPem << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cerr << "Unknown error" << std::endl;
+    }
 
     app.init();
     app.run();

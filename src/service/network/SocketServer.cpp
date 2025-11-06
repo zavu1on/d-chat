@@ -1,10 +1,12 @@
 #include "SocketServer.hpp"
 
+namespace network
+{
+
 void SocketServer::listenMessages(MessageHandler onMessage)
 {
     // listen max queued connections
-    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
-        throw std::runtime_error("Failed to listen on socket");
+    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) throw std::runtime_error("Failed to listen on socket");
 
     isListening.store(true, std::memory_order_relaxed);
 
@@ -50,7 +52,7 @@ void SocketServer::listenMessages(MessageHandler onMessage)
     }
 }
 
-SocketServer::SocketServer(unsigned short port)
+SocketServer::SocketServer(u_short port)
 {
     // init winsock2.dll
     int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -136,4 +138,5 @@ void SocketServer::stop()
 
 bool SocketServer::listening() const { return isListening.load(std::memory_order_relaxed); }
 
-unsigned short SocketServer::getPort() const { return ntohs(serverAddr.sin_port); }
+u_short SocketServer::getPort() const { return ntohs(serverAddr.sin_port); }
+}  // namespace network

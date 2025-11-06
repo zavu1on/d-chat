@@ -9,7 +9,7 @@
 class TCPClient : public IChatClient
 {
 private:
-    SocketClient client;
+    network::SocketClient client;
     std::shared_ptr<ChatService> chatService;
 
 public:
