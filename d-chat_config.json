@@ -1,8 +1,0 @@
-{
-    "host": "127.0.0.1",
-    "name": "127.0.0.1",
-    "port": "8000",
-    "private_key": "P5n5l5XEx2GisSX58RRg0kYcBce/DH4mu7oJqwZocGs=",
-    "public_key": "CjQuXcNM4tqXNXHkfbIqGuNLibFftFIwbVpTDQOi9qA=",
-    "trustedPeerList": ["127.0.0.1:8080"]
-}

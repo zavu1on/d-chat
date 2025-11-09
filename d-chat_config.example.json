@@ -1,0 +1,8 @@
+{
+    "host": "mike",
+    "name": "127.0.0.1",
+    "port": "8000",
+    "private_key": "qwerty123",
+    "public_key": "123qwerty",
+    "trustedPeerList": [""]
+}
