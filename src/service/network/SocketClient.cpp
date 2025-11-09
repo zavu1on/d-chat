@@ -1,62 +1,37 @@
 #include "SocketClient.hpp"
 
-#include <stdexcept>
-
-#include "SocketServer.hpp"
-
-bool SocketClient::connectToServer()
+void SocketClient::ensureInitialized()
 {
-    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (clientSocket == INVALID_SOCKET) return false;
-
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    inet_pton(AF_INET, host.c_str(), &serverAddr.sin_addr);
-
-    if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+    if (!initialized)
     {
-        closesocket(clientSocket);
-        clientSocket = INVALID_SOCKET;
-        connected = false;
-        return false;
-    }
-
-    connected = true;
-    return true;
-}
-
-SocketClient::SocketClient(const std::string& host, int port, bool connectImmediately)
-    : host(host), port(port), connected(false)
-{
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) throw std::runtime_error("Failed to initialize Winsock");
-
-    if (connectImmediately)
-    {
-        if (!connectToServer())
-        {
-            WSACleanup();
-            throw std::runtime_error("Failed to connect to server");
-        }
+        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (result != 0) throw std::runtime_error("Failed to initialize Winsock");
+        initialized = true;
     }
 }
+
+SocketClient::SocketClient() { ensureInitialized(); }
 
 SocketClient::~SocketClient()
 {
     disconnect();
-    WSACleanup();
+    if (initialized)
+    {
+        WSACleanup();
+        initialized = false;
+    }
 }
 
 SocketClient::SocketClient(SocketClient&& other) noexcept
     : wsaData(other.wsaData),
       clientSocket(other.clientSocket),
       serverAddr(other.serverAddr),
-      host(std::move(other.host)),
-      port(other.port),
+      initialized(other.initialized),
       connected(other.connected)
 {
     other.clientSocket = INVALID_SOCKET;
     other.connected = false;
+    other.initialized = false;
 }
 
 SocketClient& SocketClient::operator=(SocketClient&& other) noexcept
@@ -68,30 +43,63 @@ SocketClient& SocketClient::operator=(SocketClient&& other) noexcept
         wsaData = other.wsaData;
         clientSocket = other.clientSocket;
         serverAddr = other.serverAddr;
-        host = std::move(other.host);
-        port = other.port;
+        initialized = other.initialized;
         connected = other.connected;
 
         other.clientSocket = INVALID_SOCKET;
         other.connected = false;
+        other.initialized = false;
     }
     return *this;
+}
+
+bool SocketClient::connectTo(const std::string& host, u_short port)
+{
+    disconnect();
+    ensureInitialized();
+
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket == INVALID_SOCKET) return false;
+
+    serverAddr = {};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(port);
+
+    if (inet_pton(AF_INET, host.c_str(), &serverAddr.sin_addr) <= 0)
+    {
+        closesocket(clientSocket);
+        clientSocket = INVALID_SOCKET;
+        return false;
+    }
+
+    if (connect(clientSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) ==
+        SOCKET_ERROR)
+    {
+        closesocket(clientSocket);
+        clientSocket = INVALID_SOCKET;
+        connected = false;
+        return false;
+    }
+
+    connected = true;
+    return true;
 }
 
 bool SocketClient::sendMessage(const std::string& message)
 {
     if (!connected) return false;
-
-    send(clientSocket, message.c_str(), static_cast<int>(message.size()), 0);
-    return true;
+    int result = send(clientSocket, message.c_str(), static_cast<int>(message.size()), 0);
+    return result != SOCKET_ERROR;
 }
 
 std::string SocketClient::receiveMessage()
 {
     if (!connected) throw std::runtime_error("Not connected to server");
 
+    constexpr size_t BUFFER_SIZE = 4096;
     char buffer[BUFFER_SIZE];
-    int bytes = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+    int bytes = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
+
     if (bytes <= 0)
     {
         connected = false;
@@ -104,21 +112,15 @@ std::string SocketClient::receiveMessage()
 
 void SocketClient::disconnect()
 {
-    closesocket(clientSocket);
+    if (clientSocket != INVALID_SOCKET)
+    {
+        closesocket(clientSocket);
+        clientSocket = INVALID_SOCKET;
+    }
     connected = false;
 }
 
-bool SocketClient::reconnect()
-{
-    if (connected) return true;
-    return connectToServer();
-}
-
 bool SocketClient::isConnected() const { return connected; }
-
-std::string SocketClient::getHost() const { return host; }
-
-unsigned short SocketClient::getPort() const { return port; }
 
 unsigned short SocketClient::findFreePort()
 {
@@ -135,7 +137,7 @@ unsigned short SocketClient::findFreePort()
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = 0;  // system will assign a free port
+    addr.sin_port = 0;
 
     if (bind(tempSocket, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR)
     {
@@ -157,6 +159,5 @@ unsigned short SocketClient::findFreePort()
 
     closesocket(tempSocket);
     WSACleanup();
-
     return freePort;
 }

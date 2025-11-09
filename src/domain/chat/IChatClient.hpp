@@ -1,12 +1,11 @@
 #pragma once
 
-#include <string>
+#include "Message.hpp"
 
 class IChatClient
 {
 public:
     virtual ~IChatClient() = default;
 
-    // todo change message to VO
-    virtual std::string sendMessage(const std::string& message) = 0;
+    virtual void sendMessage(const Message& message, bool withSecret = true) = 0;
 };

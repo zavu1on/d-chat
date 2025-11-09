@@ -1,69 +1,63 @@
 #include "ChatApplication.hpp"
 
-ChatApplication::~ChatApplication() { shutdown(); }
+ChatApplication::~ChatApplication()
+{
+    consoleUI->stop();
+    server->stop();
+}
 
 void ChatApplication::init()
 {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
     setlocale(LC_ALL, "ru_RU.UTF-8");
-    std::cout << "=== Echo сервер ===" << std::endl;
+    running.store(false, std::memory_order_relaxed);
 
-    chatService = std::make_shared<ChatService>();
+    consoleUI = std::make_shared<ConsoleUI>();
 
-    std::cout << "Введите порт сервера: ";
-    int serverPort;
-    std::cin >> serverPort;
+    crypto = std::make_shared<OpenSSLCrypto>();
+    config = std::make_shared<JsonConfig>("d-chat_config.json", crypto);
+    if (!config->isValid())
+    {
+        consoleUI->printLog("[WARN] Default config was generated\n");
+        config->generatedDefaultConfig();
+    }
+    u_short port = static_cast<u_short>(std::stoi(config->get(ConfigField::PORT)));
 
-    server = std::make_unique<TCPServer>(serverPort, chatService);
+    std::vector<std::string> peerList;
+    config->loadTrustedPeerList(peerList);
+    if (peerList.empty())
+        consoleUI->printLog("[WARN] No trusted peers found in config. Can not connect to anyone\n");
 
-    server->start();
-    std::cout << "Сервер запущен и слушает входящие соединения..." << std::endl;
+    peerService = std::make_shared<PeerService>(peerList);
+    chatService = std::make_shared<ChatService>(config, crypto, peerService, consoleUI);
 
-    std::cout << "Введите порт клиента (порт назначения): ";
-    int clientPort;
-    std::cin >> clientPort;
-
-    client = std::make_unique<TCPClient>("127.0.0.1", clientPort, chatService);
-
-    running = true;
+    server = std::make_shared<TCPServer>(port, chatService);
+    client = std::make_shared<TCPClient>(config, crypto, chatService, peerService, consoleUI);
 }
 
 void ChatApplication::run()
 {
-    if (!running)
-    {
-        std::cerr << "Ошибка: приложение не инициализировано!" << std::endl;
-        return;
-    }
+    server->start();
+    consoleUI->printLog("[INFO] Server started\n");
 
-    std::cout << "=== Чат готов к работе! ===" << std::endl;
-
-    while (running)
-    {
-        std::string message;
-        std::cout << "\nВведите сообщение: ";
-        std::getline(std::cin >> std::ws, message);
-
-        if (message == "/exit")
+    consoleUI->startInputLoop(
+        [this](const std::string& input)
         {
-            std::cout << "Завершение работы..." << std::endl;
-            running = false;
-            break;
-        }
+            if (input == "exit")
+            {
+                running.store(false, std::memory_order_relaxed);
+                consoleUI->printLog("[SYSTEM] Shutting down...");
+                consoleUI->stop();
+                return;
+            }
 
-        std::string response = client->sendMessage(message);
+            consoleUI->printLog("[YOU] " + input);
+        });
 
-        std::cout << "Отправлено: " << message << std::endl;
-        std::cout << "Получено: " << response << std::endl;
+    running.store(true, std::memory_order_relaxed);
+
+    while (running.load(std::memory_order_relaxed))
+    {
     }
-}
-
-void ChatApplication::shutdown()
-{
-    if (server) server->stop();
-
-    if (serverThread.joinable()) serverThread.join();
-
-    running = false;
 }

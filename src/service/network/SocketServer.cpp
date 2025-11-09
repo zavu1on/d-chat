@@ -3,7 +3,8 @@
 void SocketServer::listenMessages(MessageHandler onMessage)
 {
     // listen max queued connections
-    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) throw std::runtime_error("Failed to listen on socket");
+    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
+        throw std::runtime_error("Failed to listen on socket");
 
     isListening.store(true, std::memory_order_relaxed);
 

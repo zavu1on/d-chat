@@ -1,27 +1,32 @@
 #pragma once
-
+#include <OpenSSLCrypto.hpp>
+#include <XORCrypto.hpp>
 #include <iostream>
 #include <memory>
-#include <thread>
 
 #include "ChatService.hpp"
+#include "ConsoleUI.hpp"
+#include "JsonConfig.hpp"
+#include "PeerService.hpp"
 #include "TCPClient.hpp"
 #include "TCPServer.hpp"
 
 class ChatApplication
 {
 private:
+    std::shared_ptr<ConsoleUI> consoleUI;
+    std::shared_ptr<ICrypto> crypto;
+    std::shared_ptr<IConfig> config;
+    std::shared_ptr<PeerService> peerService;
     std::shared_ptr<ChatService> chatService;
-    std::unique_ptr<TCPServer> server;
-    std::unique_ptr<TCPClient> client;
-    std::thread serverThread;
-    bool running = false;
+    std::shared_ptr<IChatServer> server;
+    std::shared_ptr<IChatClient> client;
+
+    std::atomic<bool> running;
 
 public:
-    ChatApplication() = default;
     ~ChatApplication();
 
     void init();
     void run();
-    void shutdown();
 };

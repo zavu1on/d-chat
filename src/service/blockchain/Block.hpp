@@ -2,8 +2,9 @@
 #include <cstdint>
 #include <string>
 
-struct Block
+class Block
 {
+public:
     std::string previousHash;  // hex
     std::string payloadHash;   // hex (we store only hash)
     std::string authorPubKey;  // PEM string (hex not required)

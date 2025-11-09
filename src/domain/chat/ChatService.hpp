@@ -1,18 +1,38 @@
 #pragma once
 
+#include <memory>
 #include <string>
+
+#include "ConnectMessage.hpp"
+#include "ConsoleUI.hpp"
+#include "DisconnectMessage.hpp"
+#include "IConfig.hpp"
+#include "ICrypto.hpp"
+#include "PeerService.hpp"
+
 
 class ChatService
 {
 private:
-    // todo dependencies (repositories, other services)
+    std::shared_ptr<IConfig> config;
+    std::shared_ptr<ICrypto> crypto;
+    std::shared_ptr<PeerService> peerService;
+    std::shared_ptr<ConsoleUI> consoleUI;
+
+protected:
+    void handleIncomingConnectMessage(const ConnectMessage& message, std::string& response);
+    void handleOutgoingConnectMessage(const ConnectResponseMessage& response);
+    void handleIncomingDisconnectMessage(const DisconnectMessage& message, std::string& response);
+    void handleOutgoingDisconnectMessage(const DisconnectResponseMessage& response);
 
 public:
-    explicit ChatService() {}
+    ChatService(const std::shared_ptr<IConfig>& config,
+                const std::shared_ptr<ICrypto>& crypto,
+                const std::shared_ptr<PeerService>& peerService,
+                const std::shared_ptr<ConsoleUI>& consoleUI);
 
-    // todo change message to VO
-    std::string handleIncoming(const std::string& message);
-
-    // todo change message to VO
-    void handleOutgoing(const std::string& message);
+    // server side handle request
+    void handleIncomingMessage(const std::string& message, std::string& response);
+    // client side handle response
+    void handleOutgoingMessage(const std::string& response);
 };

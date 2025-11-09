@@ -7,14 +7,19 @@ TCPServer::TCPServer(u_short port, const std::shared_ptr<ChatService>& chatServi
 
 void TCPServer::start()
 {
-    server.startAsync(
-        [this](const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)
+    bool started = server.startAsync(
+        [this](const char* buffer,
+               int bufferSize,
+               std::function<void(const std::string&)> sendCallback)
         {
             std::string message(buffer, bufferSize);
-            std::string response = chatService->handleIncoming(message);
+
+            std::string response;
+            chatService->handleIncomingMessage(message, response);
 
             sendCallback(response);
         });
+    if (!started) throw std::runtime_error("Failed to start server");
 }
 
 void TCPServer::stop() { server.stop(); }

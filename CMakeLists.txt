@@ -33,6 +33,7 @@ else()
     message(STATUS "Debug mode: compiler warnings are disabled.")
 endif()
 
+add_subdirectory(src/ui)
 add_subdirectory(src/utils)
 add_subdirectory(src/service)
 add_subdirectory(src/domain)

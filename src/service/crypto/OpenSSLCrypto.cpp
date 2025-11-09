@@ -102,8 +102,49 @@ EVP_PKEY* OpenSSLCrypto::evpFromPem(const std::string& pem) noexcept
     return pkey;  // may be nullptr
 }
 
-std::string OpenSSLCrypto::keyToString(const Bytes& k) { return std::string(k.begin(), k.end()); }
-Bytes OpenSSLCrypto::stringToKey(const std::string& s) { return Bytes(s.begin(), s.end()); }
+#include <openssl/buffer.h>
+#include <openssl/evp.h>
+
+
+std::string OpenSSLCrypto::keyToString(const Bytes& k)
+{
+    if (k.empty()) return {};
+
+    BIO* bio = BIO_new(BIO_s_mem());
+    BIO* b64 = BIO_new(BIO_f_base64());
+    bio = BIO_push(b64, bio);
+
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);  // без переносов строк
+    BIO_write(bio, k.data(), static_cast<int>(k.size()));
+    BIO_flush(bio);
+
+    BUF_MEM* bufferPtr;
+    BIO_get_mem_ptr(bio, &bufferPtr);
+
+    std::string encoded(bufferPtr->data, bufferPtr->length);
+    BIO_free_all(bio);
+
+    return encoded;
+}
+
+Bytes OpenSSLCrypto::stringToKey(const std::string& s)
+{
+    if (s.empty()) return {};
+
+    BIO* bio = BIO_new_mem_buf(s.data(), static_cast<int>(s.size()));
+    BIO* b64 = BIO_new(BIO_f_base64());
+    bio = BIO_push(b64, bio);
+
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);  // без переносов строк
+
+    Bytes decoded(s.size());
+    int len = BIO_read(bio, decoded.data(), static_cast<int>(decoded.size()));
+    BIO_free_all(bio);
+
+    if (len < 0) len = 0;
+    decoded.resize(len);
+    return decoded;
+}
 
 // Generate EC keypair (P-256), return PEM-encoded keys in bytes
 KeyPair OpenSSLCrypto::generateKeyPair()

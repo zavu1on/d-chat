@@ -1,5 +1,7 @@
 #include "IConfig.hpp"
 
+#include <stdexcept>
+
 std::string IConfig::configFieldToString(ConfigField key)
 {
     switch (key)
@@ -16,7 +18,7 @@ std::string IConfig::configFieldToString(ConfigField key)
             return "name";
     }
 
-    return "name";
+    throw std::runtime_error("Unknown config field");
 }
 
 ConfigField IConfig::stringToConfigField(const std::string& key)
@@ -31,6 +33,6 @@ ConfigField IConfig::stringToConfigField(const std::string& key)
         return ConfigField::PRIVATE_KEY;
     else if (key == "name")
         return ConfigField::NAME;
-    else
-        return ConfigField::NAME;
+
+    throw std::runtime_error("Unknown config field");
 }

@@ -4,11 +4,14 @@ add_library(
     chat/TCPServer.cpp
     chat/TCPClient.cpp
     config/JsonConfig.cpp
+    message/ConnectMessage.cpp
+    message/DisconnectMessage.cpp
 )
 
 target_link_libraries(
     d-chat_infra 
-    PRIVATE 
+    PRIVATE
+    d-chat_utils
     d-chat_service 
     d-chat_domain
 )
@@ -18,6 +21,7 @@ target_include_directories(
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/chat
     ${CMAKE_CURRENT_SOURCE_DIR}/config
+    ${CMAKE_CURRENT_SOURCE_DIR}/message
 )
 
 set(CONFIG_FILE "${CMAKE_SOURCE_DIR}/d-chat_config.json")
