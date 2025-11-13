@@ -11,18 +11,20 @@
 #include "TCPClient.hpp"
 #include "TCPServer.hpp"
 
+namespace app
+{
 class ChatApplication
 {
 private:
-    std::shared_ptr<ConsoleUI> consoleUI;
-    std::shared_ptr<ICrypto> crypto;
-    std::shared_ptr<IConfig> config;
-    std::shared_ptr<PeerService> peerService;
-    std::shared_ptr<ChatService> chatService;
-    std::shared_ptr<IChatServer> server;
-    std::shared_ptr<IChatClient> client;
+    std::shared_ptr<ui::ConsoleUI> consoleUI;
+    std::shared_ptr<crypto::ICrypto> crypto;
+    std::shared_ptr<config::IConfig> config;
+    std::shared_ptr<peer::PeerService> peerService;
+    std::shared_ptr<chat::ChatService> chatService;
+    std::shared_ptr<network::IChatServer> server;
+    std::shared_ptr<network::IChatClient> client;
 
-    UserPeer from;
+    peer::UserPeer from;
     std::atomic<bool> running;
 
 public:
@@ -31,3 +33,4 @@ public:
     void init();
     void run();
 };
+}  // namespace app

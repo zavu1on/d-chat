@@ -6,6 +6,8 @@
 #include "ICrypto.hpp"
 #include "UserPeer.hpp"
 
+namespace message
+{
 using json = nlohmann::json;
 
 enum class MessageType
@@ -15,8 +17,8 @@ enum class MessageType
     CONNECT_RESPONSE,
     PEER_LIST,
     PEER_LIST_RESPONSE,
-    SEND_MESSAGE,
-    SEND_MESSAGE_RESPONSE,
+    TEXT_MESSAGE,
+    TEXT_MESSAGE_RESPONSE,
     DISCONNECT,
     DISCONNECT_RESPONSE,
 };
@@ -28,12 +30,15 @@ protected:
 
 public:
     MessageType type;
-    UserPeer from;
-    UserPeer to;
+    peer::UserPeer from;
+    peer::UserPeer to;
     uint64_t timestamp;
 
     Message();
-    Message(MessageType type, const UserPeer& from, const UserPeer& to, uint64_t timestamp);
+    Message(MessageType type,
+            const peer::UserPeer& from,
+            const peer::UserPeer& to,
+            uint64_t timestamp);
     Message(const json& json);
     virtual ~Message() = default;
     virtual void serialize(json& json) const = 0;
@@ -48,18 +53,19 @@ private:
     void serialize(json& json) const final;
 
 protected:
-    Bytes signature;
+    crypto::Bytes signature;
 
 public:
     SecretMessage();
     SecretMessage(MessageType type,
-                  const UserPeer& from,
-                  const UserPeer& to,
+                  const peer::UserPeer& from,
+                  const peer::UserPeer& to,
                   uint64_t timestamp,
-                  const Bytes& signature);
-    SecretMessage(const json& json, std::shared_ptr<ICrypto> crypto);
+                  const crypto::Bytes& signature);
+    SecretMessage(const json& json, std::shared_ptr<crypto::ICrypto> crypto);
 
     virtual void serialize(json& json,
                            const std::string& privateKey,
-                           std::shared_ptr<ICrypto> crypto) const = 0;
+                           std::shared_ptr<crypto::ICrypto> crypto) const = 0;
 };
+}  // namespace message

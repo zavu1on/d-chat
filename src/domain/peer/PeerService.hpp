@@ -4,6 +4,8 @@
 
 #include "UserPeer.hpp"
 
+namespace peer
+{
 class PeerService
 {
 private:
@@ -19,3 +21,4 @@ public:
     void addPeer(const UserPeer& peer);
     void removePeer(const UserPeer& peer);
 };
+}  // namespace peer

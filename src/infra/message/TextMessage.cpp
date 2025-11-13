@@ -1,0 +1,73 @@
+#include "TextMessage.hpp"
+
+namespace message
+{
+crypto::Bytes TextMessage::createSessionKey(const std::string& privateKey,
+                                            const std::string& publicKey,
+                                            std::shared_ptr<crypto::ICrypto> crypto) const
+{
+    crypto::Bytes privateKeyBytes = crypto->stringToKey(privateKey);
+    crypto::Bytes publicKeyBytes = crypto->stringToKey(publicKey);
+
+    return crypto->createSessionKey(privateKeyBytes, publicKeyBytes);
+}
+
+TextMessage::TextMessage() : SecretMessage(), payload() {}
+
+TextMessage::TextMessage(const peer::UserPeer& from,
+                         const peer::UserPeer& to,
+                         uint64_t timestamp,
+                         const std::string& message)
+    : SecretMessage(MessageType::TEXT_MESSAGE, from, to, timestamp, crypto::Bytes()),
+      payload{ message }
+{
+}
+
+TextMessage::TextMessage(const json& json,
+                         const std::string& privateKey,
+                         std::shared_ptr<crypto::ICrypto> crypto)
+    : SecretMessage(json, crypto), payload{}
+{
+    if (type != MessageType::TEXT_MESSAGE) throw std::runtime_error("Invalid message type");
+
+    crypto::Bytes sessionKey = createSessionKey(privateKey, from.publicKey, crypto);
+
+    crypto::Bytes cipher = crypto->stringToKey(json["payload"]["message"].get<std::string>());
+    crypto::Bytes plain = crypto->decrypt(cipher, sessionKey);
+    crypto::Bytes publicKeyBytes = crypto->stringToKey(from.publicKey);
+
+    if (!crypto->verify(plain, signature, publicKeyBytes))
+        throw std::runtime_error("Invalid signature");
+
+    payload.message = std::string(plain.begin(), plain.end());
+}
+
+void TextMessage::serialize(json& json,
+                            const std::string& privateKey,
+                            std::shared_ptr<crypto::ICrypto> crypto) const
+{
+    crypto::Bytes plain(payload.message.begin(), payload.message.end());
+    crypto::Bytes sessionKey = createSessionKey(privateKey, to.publicKey, crypto);
+    crypto::Bytes encryptedMessage = crypto->encrypt(plain, sessionKey);
+
+    crypto::Bytes privateKeyBytes = crypto->stringToKey(privateKey);
+    crypto::Bytes signatureBytes = crypto->sign(plain, privateKeyBytes);
+
+    json = getBasicSerialization();
+    json["payload"]["message"] = crypto->keyToString(encryptedMessage);
+    json["signature"] = crypto->keyToString(signatureBytes);
+}
+
+TextMessageResponse::TextMessageResponse() : Message() {}
+
+TextMessageResponse::TextMessageResponse(const peer::UserPeer& from,
+                                         const peer::UserPeer& to,
+                                         uint64_t timestamp)
+    : Message(MessageType::TEXT_MESSAGE_RESPONSE, from, to, timestamp)
+{
+}
+
+TextMessageResponse::TextMessageResponse(const json& json) : Message(json) {}
+
+void TextMessageResponse::serialize(json& json) const { json = getBasicSerialization(); }
+}  // namespace message

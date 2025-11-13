@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+namespace crypto
+{
 using Bytes = std::vector<uint8_t>;
 
 struct KeyPair
@@ -30,3 +32,4 @@ public:
     virtual Bytes sign(const Bytes& message, const Bytes& privateKey) = 0;
     virtual bool verify(const Bytes& message, const Bytes& signature, const Bytes& publicKey) = 0;
 };
+}  // namespace crypto

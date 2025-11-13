@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+namespace config
+{
+
 enum class ConfigField
 {
     HOST,
@@ -34,3 +37,4 @@ public:
     static std::string configFieldToString(ConfigField key);
     static ConfigField stringToConfigField(const std::string& key);
 };
+}  // namespace config

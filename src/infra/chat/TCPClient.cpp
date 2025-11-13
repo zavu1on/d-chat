@@ -1,13 +1,15 @@
 #include "TCPClient.hpp"
 
-#include "DisconnectMessage.hpp"
+#include "DisconnectionMessage.hpp"
 #include "timestamp.hpp"
 
-TCPClient::TCPClient(const std::shared_ptr<IConfig>& config,
-                     const std::shared_ptr<ICrypto>& crypto,
-                     const std::shared_ptr<ChatService>& chatService,
-                     const std::shared_ptr<PeerService>& peerService,
-                     const std::shared_ptr<ConsoleUI>& consoleUI)
+namespace network
+{
+TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
+                     const std::shared_ptr<crypto::ICrypto>& crypto,
+                     const std::shared_ptr<chat::ChatService>& chatService,
+                     const std::shared_ptr<peer::PeerService>& peerService,
+                     const std::shared_ptr<ui::ConsoleUI>& consoleUI)
     : client(),
       config(config),
       crypto(crypto),
@@ -15,47 +17,48 @@ TCPClient::TCPClient(const std::shared_ptr<IConfig>& config,
       peerService(peerService),
       consoleUI(consoleUI)
 {
-    const std::vector<UserHost>& hosts = peerService->getHosts();
+    const std::vector<peer::UserHost>& hosts = peerService->getHosts();
 
-    std::string host = config->get(ConfigField::HOST);
-    u_short port = static_cast<u_short>(std::stoi(config->get(ConfigField::PORT)));
+    std::string host = config->get(config::ConfigField::HOST);
+    u_short port = static_cast<u_short>(std::stoi(config->get(config::ConfigField::PORT)));
 
     for (const auto& userHost : hosts)
     {
-        UserPeer from{ host, port, config->get(ConfigField::PUBLIC_KEY) };
-        UserPeer to{ userHost.host, userHost.port, "null" };
-        u_int64 timestamp = getTimestamp();
+        peer::UserPeer from{ host, port, config->get(config::ConfigField::PUBLIC_KEY) };
+        peer::UserPeer to{ userHost.host, userHost.port, "null" };
+        u_int64 timestamp = utils::getTimestamp();
 
-        ConnectMessage message(from, to, timestamp);
+        message::ConnectionMessage message(from, to, timestamp);
         sendMessage(message);
     }
 }
 
 TCPClient::~TCPClient()
 {
-    std::string host = config->get(ConfigField::HOST);
-    u_short port = static_cast<u_short>(std::stoi(config->get(ConfigField::PORT)));
-    std::string publicKey = config->get(ConfigField::PUBLIC_KEY);
+    std::string host = config->get(config::ConfigField::HOST);
+    u_short port = static_cast<u_short>(std::stoi(config->get(config::ConfigField::PORT)));
+    std::string publicKey = config->get(config::ConfigField::PUBLIC_KEY);
 
-    UserPeer from{ host, port, publicKey };
-    const std::vector<UserPeer>& peers = peerService->getPeers();
+    peer::UserPeer from{ host, port, publicKey };
+    const std::vector<peer::UserPeer>& peers = peerService->getPeers();
 
     for (const auto& peer : peers)
     {
-        DisconnectMessage message(from, peer, getTimestamp());
+        message::DisconnectionMessage message(from, peer, utils::getTimestamp());
         sendMessage(message);
     }
 }
 
-void TCPClient::sendMessage(const Message& message, bool withSecret)
+void TCPClient::sendMessage(const message::Message& message, bool withSecret)
 {
     client.connectTo(message.to.host, message.to.port);
 
     json jMessage;
     if (withSecret)
     {
-        const MySendMessage& sendMessage = dynamic_cast<const MySendMessage&>(message);
-        sendMessage.serialize(jMessage, config->get(ConfigField::PRIVATE_KEY), crypto);
+        const message::TextMessage& sendMessage =
+            dynamic_cast<const message::TextMessage&>(message);
+        sendMessage.serialize(jMessage, config->get(config::ConfigField::PRIVATE_KEY), crypto);
     }
     else
         message.serialize(jMessage);
@@ -69,3 +72,4 @@ void TCPClient::sendMessage(const Message& message, bool withSecret)
 
     client.disconnect();
 }
+}  // namespace network

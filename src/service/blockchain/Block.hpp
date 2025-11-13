@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <string>
 
+namespace blockchain
+{
 class Block
 {
 public:
@@ -15,3 +17,4 @@ public:
     std::string toStringForHash() const;  // canonical serialization for hashing
     void computeHash();                   // compute hash via OpenSSL SHA256
 };
+}  // namespace blockchain

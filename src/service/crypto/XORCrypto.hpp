@@ -3,6 +3,8 @@
 
 #include "ICrypto.hpp"
 
+namespace crypto
+{
 class XORCrypto : public ICrypto
 {
 private:
@@ -28,3 +30,4 @@ public:
     Bytes sign(const Bytes& message, const Bytes& privateKey) override;
     bool verify(const Bytes& message, const Bytes& signature, const Bytes& publicKey) override;
 };
+}  // namespace crypto

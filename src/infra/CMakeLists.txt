@@ -4,9 +4,9 @@ add_library(
     chat/TCPServer.cpp
     chat/TCPClient.cpp
     config/JsonConfig.cpp
-    message/ConnectMessage.cpp
-    message/SendMessage.cpp
-    message/DisconnectMessage.cpp
+    message/ConnectionMessage.cpp
+    message/TextMessage.cpp
+    message/DisconnectionMessage.cpp
 )
 
 target_link_libraries(

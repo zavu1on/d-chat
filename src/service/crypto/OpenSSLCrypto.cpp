@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace crypto
+{
 void OpenSSLCrypto::throwIf(bool cond, const char* msg)
 {
     if (cond) throw std::runtime_error(msg);
@@ -104,7 +106,6 @@ EVP_PKEY* OpenSSLCrypto::evpFromPem(const std::string& pem) noexcept
 
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-
 
 std::string OpenSSLCrypto::keyToString(const Bytes& k)
 {
@@ -301,7 +302,8 @@ Bytes OpenSSLCrypto::aes_gcm_encrypt(const Bytes& key, const Bytes& plain)
 
     Bytes cipher(plain.size());
     int outlen = 0;
-    if (1 != EVP_EncryptUpdate(ctx, cipher.data(), &outlen, plain.data(), static_cast<int>(plain.size())))
+    if (1 != EVP_EncryptUpdate(
+                 ctx, cipher.data(), &outlen, plain.data(), static_cast<int>(plain.size())))
     {
         EVP_CIPHER_CTX_free(ctx);
         throw std::runtime_error("EncryptUpdate failed");
@@ -359,13 +361,15 @@ Bytes OpenSSLCrypto::aes_gcm_decrypt(const Bytes& key, const Bytes& in)
 
     Bytes out(cipher.size());
     int outlen = 0;
-    if (1 != EVP_DecryptUpdate(ctx, out.data(), &outlen, cipher.data(), static_cast<int>(cipher.size())))
+    if (1 !=
+        EVP_DecryptUpdate(ctx, out.data(), &outlen, cipher.data(), static_cast<int>(cipher.size())))
     {
         EVP_CIPHER_CTX_free(ctx);
         throw std::runtime_error("DecryptUpdate failed");
     }
     int total = outlen;
-    if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, static_cast<int>(tag.size()), (void*)tag.data()))
+    if (1 != EVP_CIPHER_CTX_ctrl(
+                 ctx, EVP_CTRL_GCM_SET_TAG, static_cast<int>(tag.size()), (void*)tag.data()))
     {
         EVP_CIPHER_CTX_free(ctx);
         throw std::runtime_error("SetTag failed");
@@ -463,3 +467,4 @@ bool OpenSSLCrypto::verify(const Bytes& message, const Bytes& signature, const B
     EVP_PKEY_free(pkey);
     return rc == 1;
 }
+}  // namespace crypto

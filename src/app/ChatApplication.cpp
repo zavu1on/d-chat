@@ -1,8 +1,10 @@
 #include "ChatApplication.hpp"
 
-#include "SendMessage.hpp"
+#include "TextMessage.hpp"
 #include "timestamp.hpp"
 
+namespace app
+{
 ChatApplication::~ChatApplication() { server->stop(); }
 
 void ChatApplication::init()
@@ -12,29 +14,31 @@ void ChatApplication::init()
     setlocale(LC_ALL, "ru_RU.UTF-8");
     running.store(false, std::memory_order_relaxed);
 
-    consoleUI = std::make_shared<ConsoleUI>();
+    consoleUI = std::make_shared<ui::ConsoleUI>();
 
-    crypto = std::make_shared<OpenSSLCrypto>();
-    config = std::make_shared<JsonConfig>("d-chat_config.json", crypto);
+    crypto = std::make_shared<crypto::OpenSSLCrypto>();
+    config = std::make_shared<config::JsonConfig>("d-chat_config.json", crypto);
     if (!config->isValid())
     {
         consoleUI->printLog("[WARN] Default config was generated\n");
         config->generatedDefaultConfig();
     }
-    u_short port = static_cast<u_short>(std::stoi(config->get(ConfigField::PORT)));
+    u_short port = static_cast<u_short>(std::stoi(config->get(config::ConfigField::PORT)));
 
-    from = UserPeer(config->get(ConfigField::HOST), port, config->get(ConfigField::PUBLIC_KEY));
+    from = peer::UserPeer(
+        config->get(config::ConfigField::HOST), port, config->get(config::ConfigField::PUBLIC_KEY));
 
     std::vector<std::string> peerList;
     config->loadTrustedPeerList(peerList);
     if (peerList.empty())
         consoleUI->printLog("[WARN] No trusted peers found in config. Can not connect to anyone\n");
 
-    peerService = std::make_shared<PeerService>(peerList);
-    chatService = std::make_shared<ChatService>(config, crypto, peerService, consoleUI);
+    peerService = std::make_shared<peer::PeerService>(peerList);
+    chatService = std::make_shared<chat::ChatService>(config, crypto, peerService, consoleUI);
 
-    server = std::make_shared<TCPServer>(port, chatService);
-    client = std::make_shared<TCPClient>(config, crypto, chatService, peerService, consoleUI);
+    server = std::make_shared<network::TCPServer>(port, chatService);
+    client =
+        std::make_shared<network::TCPClient>(config, crypto, chatService, peerService, consoleUI);
 }
 
 void ChatApplication::run()
@@ -94,10 +98,10 @@ void ChatApplication::run()
 
                     int port = std::stoi(portStr);
 
-                    UserPeer to = peerService->findPeer(UserHost(host, port));
-                    uint64_t timestamp = getTimestamp();
+                    peer::UserPeer to = peerService->findPeer(peer::UserHost(host, port));
+                    uint64_t timestamp = utils::getTimestamp();
 
-                    MySendMessage sendMessage(from, to, timestamp, message);
+                    message::TextMessage sendMessage(from, to, timestamp, message);
                     client->sendMessage(sendMessage, true);
                 }
                 catch (std::exception& e)
@@ -115,5 +119,4 @@ void ChatApplication::run()
     {
     }
 }
-
-// /send 127.0.0.1:8001 Hi
+}  // namespace app

@@ -7,6 +7,8 @@
 #include <string>
 #include <thread>
 
+namespace ui {
+
 class ConsoleUI
 {
 private:
@@ -25,3 +27,5 @@ public:
     void stop();
     void setCurrentInput(const std::string& s);
 };
+
+} // namespace ui

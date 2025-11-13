@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+namespace blockchain
+{
 void Blockchain::addBlock(Block b)
 {
     if (!m_chain.empty())
@@ -12,7 +14,8 @@ void Blockchain::addBlock(Block b)
     {
         b.previousHash = "0";
     }
-    b.timestamp = static_cast<uint64_t>(std::chrono::system_clock::now().time_since_epoch().count());
+    b.timestamp =
+        static_cast<uint64_t>(std::chrono::system_clock::now().time_since_epoch().count());
     b.computeHash();
     m_chain.emplace_back(std::move(b));
 }
@@ -28,3 +31,4 @@ bool Blockchain::verifyChain() const
     }
     return true;
 }
+}  // namespace blockchain

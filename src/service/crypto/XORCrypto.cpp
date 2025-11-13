@@ -5,6 +5,8 @@
 
 #include "hex.hpp"
 
+namespace crypto
+{
 // for sha256 use minimal implementation via std::hash-like fallback if OpenSSL absent.
 // For simplicity here we use a tiny wrapper to std::hash on blocks (not cryptographically secure)
 // but for integrity (block hashing) we'll use OpenSSLCrypto if available.
@@ -21,7 +23,8 @@ Bytes XORCrypto::sha256_bytes(const Bytes& data)
 
 XORCrypto::XORCrypto()
 {
-    m_rng.seed(static_cast<uint64_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+    m_rng.seed(static_cast<uint64_t>(
+        std::chrono::high_resolution_clock::now().time_since_epoch().count()));
 }
 
 Bytes XORCrypto::generateSecret(size_t bytes)
@@ -39,8 +42,8 @@ KeyPair XORCrypto::generateKeyPair()
     return kp;
 }
 
-std::string XORCrypto::keyToString(const Bytes& k) { return to_hex(k); }
-Bytes XORCrypto::stringToKey(const std::string& s) { return from_hex(s); }
+std::string XORCrypto::keyToString(const Bytes& k) { return utils::to_hex(k); }
+Bytes XORCrypto::stringToKey(const std::string& s) { return utils::from_hex(s); }
 
 Bytes XORCrypto::createSessionKey(const Bytes& privateKey, const Bytes& peerPublicKey)
 {
@@ -80,3 +83,4 @@ bool XORCrypto::verify(const Bytes& message, const Bytes& signature, const Bytes
     (void)publicKey;
     return signature.size() == 32;
 }
+}  // namespace crypto

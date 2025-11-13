@@ -5,6 +5,8 @@
 #include <map>
 #include <nlohmann/json.hpp>
 
+namespace json
+{
 using json = nlohmann::json;
 
 template <typename T = std::string>
@@ -56,3 +58,4 @@ public:
 
     std::string getPath() const { return path; };
 };
+}  // namespace json

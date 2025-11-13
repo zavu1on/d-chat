@@ -1,5 +1,7 @@
 #include "SocketClient.hpp"
 
+namespace network
+{
 void SocketClient::ensureInitialized()
 {
     if (!initialized)
@@ -161,3 +163,4 @@ unsigned short SocketClient::findFreePort()
     WSACleanup();
     return freePort;
 }
+}  // namespace network

@@ -1,5 +1,7 @@
 #include "UserPeer.hpp"
 
+namespace peer
+{
 UserHost::UserHost() : host(""), port(0) {}
 
 UserHost::UserHost(const std::string& host, unsigned short port) : host(host), port(port) {}
@@ -30,3 +32,4 @@ bool UserPeer::operator==(const UserPeer& other) const
 {
     return port == other.port && host == other.host && publicKey == other.publicKey;
 }
+}  // namespace peer

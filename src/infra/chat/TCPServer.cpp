@@ -1,6 +1,8 @@
 #include "TCPServer.hpp"
 
-TCPServer::TCPServer(u_short port, const std::shared_ptr<ChatService>& chatService)
+namespace network
+{
+TCPServer::TCPServer(u_short port, const std::shared_ptr<chat::ChatService>& chatService)
     : server(port), chatService(chatService)
 {
 }
@@ -25,3 +27,4 @@ void TCPServer::start()
 void TCPServer::stop() { server.stop(); }
 
 bool TCPServer::listening() const { return server.listening(); }
+}  // namespace network

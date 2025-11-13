@@ -5,10 +5,13 @@
 
 #include "SocketClient.hpp"
 
-JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<ICrypto> crypto)
+namespace config
+{
+
+JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<crypto::ICrypto> crypto)
     : jsonFile(path), crypto(crypto)
 {
-    json jData;
+    json::json jData;
     try
     {
         jData = jsonFile.read();
@@ -19,7 +22,7 @@ JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<ICrypto> crypto)
         jData = jsonFile.read();
     }
 
-    for (json::iterator iter = jData.begin(); iter != jData.end(); ++iter)
+    for (json::json::iterator iter = jData.begin(); iter != jData.end(); ++iter)
     {
         auto key = iter.key();
         auto value = iter.value();
@@ -49,7 +52,7 @@ void JsonConfig::update(ConfigField key, const std::string& value)
 void JsonConfig::loadTrustedPeerList(std::vector<std::string>& trustedPeers)
 {
     trustedPeers.clear();
-    json jData = jsonFile.read();
+    json::json jData = jsonFile.read();
 
     if (jData.contains("trustedPeerList") && jData["trustedPeerList"].is_array())
     {
@@ -70,7 +73,7 @@ bool JsonConfig::isValid()
     for (const auto& key : CONFIG_FIELDS)
         if (!data.count(key)) return false;
 
-    json jData = jsonFile.read();
+    json::json jData = jsonFile.read();
     if (jData.contains("trustedPeerList") && jData["trustedPeerList"].is_array()) return true;
 
     return false;
@@ -78,15 +81,16 @@ bool JsonConfig::isValid()
 
 void JsonConfig::generatedDefaultConfig()
 {
-    json jData;
-    KeyPair keyPair = crypto->generateKeyPair();
+    json::json jData;
+    crypto::KeyPair keyPair = crypto->generateKeyPair();
 
     jData["host"] = "127.0.0.1";
-    jData["port"] = std::to_string(SocketClient::findFreePort());
+    jData["port"] = std::to_string(network::SocketClient::findFreePort());
     jData["public_key"] = crypto->keyToString(keyPair.publicKey);
     jData["private_key"] = crypto->keyToString(keyPair.privateKey);
     jData["name"] = jData["host"];
-    jData["trustedPeerList"] = json::array();
+    jData["trustedPeerList"] = json::json::array();
 
     jsonFile.writeJson(jData);
 }
+}  // namespace config

@@ -1,5 +1,7 @@
 #include "ConsoleUI.hpp"
 
+namespace ui {
+
 ConsoleUI::ConsoleUI() : running(false) {}
 
 void ConsoleUI::startInputLoop(InputHandler handler)
@@ -49,3 +51,5 @@ void ConsoleUI::setCurrentInput(const std::string& s)
     std::lock_guard<std::mutex> lock(consoleMutex);
     currentInput = s;
 }
+
+} // namespace ui

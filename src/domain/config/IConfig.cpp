@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+namespace config
+{
 std::string IConfig::configFieldToString(ConfigField key)
 {
     switch (key)
@@ -36,3 +38,4 @@ ConfigField IConfig::stringToConfigField(const std::string& key)
 
     throw std::runtime_error("Unknown config field");
 }
+}  // namespace config

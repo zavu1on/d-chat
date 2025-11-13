@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+namespace message
+{
 json Message::getBasicSerialization() const
 {
     json jData;
@@ -14,15 +16,18 @@ json Message::getBasicSerialization() const
 
 Message::Message() : type(MessageType::NONE), from(), to(), timestamp(0) {}
 
-Message::Message(MessageType type, const UserPeer& from, const UserPeer& to, uint64_t timestamp)
+Message::Message(MessageType type,
+                 const peer::UserPeer& from,
+                 const peer::UserPeer& to,
+                 uint64_t timestamp)
     : type(type), from(from), to(to), timestamp(timestamp)
 {
 }
 
 Message::Message(const json& json)
 {
-    from = UserPeer(json["from"]);
-    to = UserPeer(json["to"]);
+    from = peer::UserPeer(json["from"]);
+    to = peer::UserPeer(json["to"]);
     timestamp = json["timestamp"].get<uint64_t>();
     type = Message::fromStringToMessageType(json["type"].get<std::string>());
 }
@@ -41,10 +46,10 @@ std::string Message::fromMessageTypeToString(MessageType type)
             return "PEER_LIST";
         case MessageType::PEER_LIST_RESPONSE:
             return "PEER_LIST_RESPONSE";
-        case MessageType::SEND_MESSAGE:
-            return "SEND_MESSAGE";
-        case MessageType::SEND_MESSAGE_RESPONSE:
-            return "SEND_MESSAGE_RESPONSE";
+        case MessageType::TEXT_MESSAGE:
+            return "TEXT_MESSAGE";
+        case MessageType::TEXT_MESSAGE_RESPONSE:
+            return "TEXT_MESSAGE_RESPONSE";
         case MessageType::DISCONNECT:
             return "DISCONNECT";
         case MessageType::DISCONNECT_RESPONSE:
@@ -61,8 +66,8 @@ MessageType Message::fromStringToMessageType(const std::string& type)
     if (type == "CONNECT_RESPONSE") return MessageType::CONNECT_RESPONSE;
     if (type == "PEER_LIST") return MessageType::PEER_LIST;
     if (type == "PEER_LIST_RESPONSE") return MessageType::PEER_LIST_RESPONSE;
-    if (type == "SEND_MESSAGE") return MessageType::SEND_MESSAGE;
-    if (type == "SEND_MESSAGE_RESPONSE") return MessageType::SEND_MESSAGE_RESPONSE;
+    if (type == "TEXT_MESSAGE") return MessageType::TEXT_MESSAGE;
+    if (type == "TEXT_MESSAGE_RESPONSE") return MessageType::TEXT_MESSAGE_RESPONSE;
     if (type == "DISCONNECT") return MessageType::DISCONNECT;
     if (type == "DISCONNECT_RESPONSE") return MessageType::DISCONNECT_RESPONSE;
 
@@ -79,15 +84,17 @@ void SecretMessage::serialize(json& json) const
 SecretMessage::SecretMessage() : Message(), signature() {}
 
 SecretMessage::SecretMessage(MessageType type,
-                             const UserPeer& from,
-                             const UserPeer& to,
+                             const peer::UserPeer& from,
+                             const peer::UserPeer& to,
                              uint64_t timestamp,
-                             const Bytes& signature)
+                             const crypto::Bytes& signature)
     : Message(type, from, to, timestamp), signature(signature)
 {
 }
 
-SecretMessage::SecretMessage(const json& json, std::shared_ptr<ICrypto> crypto) : Message(json)
+SecretMessage::SecretMessage(const json& json, std::shared_ptr<crypto::ICrypto> crypto)
+    : Message(json)
 {
     signature = crypto->stringToKey(json["signature"].get<std::string>());
 }
+}  // namespace message

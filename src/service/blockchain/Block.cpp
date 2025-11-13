@@ -6,10 +6,14 @@
 
 #include "hex.hpp"
 
+namespace blockchain
+{
+
 std::string Block::toStringForHash() const
 {
     std::ostringstream oss;
-    oss << previousHash << "|" << payloadHash << "|" << authorPubKey << "|" << signature << "|" << timestamp;
+    oss << previousHash << "|" << payloadHash << "|" << authorPubKey << "|" << signature << "|"
+        << timestamp;
     return oss.str();
 }
 
@@ -19,5 +23,7 @@ void Block::computeHash()
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256(reinterpret_cast<const unsigned char*>(body.data()), body.size(), digest);
     std::vector<uint8_t> v(digest, digest + SHA256_DIGEST_LENGTH);
-    hash = to_hex(v);
+    hash = utils::to_hex(v);
 }
+
+}  // namespace blockchain

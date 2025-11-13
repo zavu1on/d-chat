@@ -3,6 +3,8 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+namespace peer
+{
 using json = nlohmann::json;
 
 class UserHost
@@ -27,3 +29,4 @@ public:
 
     bool operator==(const UserPeer& other) const;
 };
+}  // namespace peer

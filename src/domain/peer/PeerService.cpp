@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+namespace peer
+{
 PeerService::PeerService(std::vector<std::string>& hosts)
 {
     for (const std::string& trustedPeer : hosts)
@@ -45,3 +47,4 @@ void PeerService::removePeer(const UserPeer& peer)
     auto el = std::find(peers.begin(), peers.end(), peer);
     if (el != peers.end()) peers.erase(el);
 }
+}  // namespace peer

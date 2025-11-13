@@ -6,7 +6,7 @@ int main()
 {
     std::cout << "[INFO] Application started" << std::endl;
 
-    ChatApplication app;
+    app::ChatApplication app;
     app.init();
     app.run();
 

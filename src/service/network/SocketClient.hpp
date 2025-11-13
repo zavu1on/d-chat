@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include <string>
 
-
+namespace network
+{
 class SocketClient
 {
 protected:
@@ -38,3 +39,4 @@ public:
 private:
     void ensureInitialized();
 };
+}  // namespace network

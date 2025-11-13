@@ -4,6 +4,8 @@
 #include "../utils/hex.hpp"
 #include "ICrypto.hpp"
 
+namespace crypto
+{
 class OpenSSLCrypto : public ICrypto
 {
 public:
@@ -18,7 +20,8 @@ public:
 
     Bytes createSessionKey(const Bytes& privateKey, const Bytes& peerPublicKey) override;
 
-    Bytes encrypt(const Bytes& message, const Bytes& key) override;  // AES-256-GCM result = iv(12)|tag(16)|cipher
+    Bytes encrypt(const Bytes& message,
+                  const Bytes& key) override;  // AES-256-GCM result = iv(12)|tag(16)|cipher
     Bytes decrypt(const Bytes& cipher, const Bytes& key) override;
 
     Bytes sign(const Bytes& message, const Bytes& privateKey) override;  // ECDSA
@@ -37,3 +40,4 @@ private:
     // helper
     static void throwIf(bool cond, const char* msg);
 };
+}  // namespace crypto
