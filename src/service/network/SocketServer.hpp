@@ -8,13 +8,13 @@
 #include <stdexcept>
 #include <thread>
 
-const int BUFFER_SIZE = 512;
+const int BUFFER_SIZE = 2048;
 
 class SocketServer
 {
 private:
-    using MessageHandler =
-        std::function<void(const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)>;
+    using MessageHandler = std::function<void(
+        const char* buffer, int bufferSize, std::function<void(const std::string&)> sendCallback)>;
 
     void listenMessages(MessageHandler onMessage);
 

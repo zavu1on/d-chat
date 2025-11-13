@@ -4,5 +4,5 @@
     "port": "8000",
     "private_key": "qwerty123",
     "public_key": "123qwerty",
-    "trustedPeerList": [""]
+    "trustedPeerList": []
 }

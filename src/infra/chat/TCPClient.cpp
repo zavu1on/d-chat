@@ -26,8 +26,8 @@ TCPClient::TCPClient(const std::shared_ptr<IConfig>& config,
         UserPeer to{ userHost.host, userHost.port, "null" };
         u_int64 timestamp = getTimestamp();
 
-        ConnectMessage message = ConnectMessage(from, to, timestamp);
-        sendMessage(message, false);
+        ConnectMessage message(from, to, timestamp);
+        sendMessage(message);
     }
 }
 
@@ -42,7 +42,7 @@ TCPClient::~TCPClient()
 
     for (const auto& peer : peers)
     {
-        DisconnectMessage message = DisconnectMessage(from, peer, getTimestamp());
+        DisconnectMessage message(from, peer, getTimestamp());
         sendMessage(message);
     }
 }
@@ -52,19 +52,18 @@ void TCPClient::sendMessage(const Message& message, bool withSecret)
     client.connectTo(message.to.host, message.to.port);
 
     json jMessage;
-    message.serialize(jMessage);
-
-    std::string payload = jMessage.dump();
-    std::string privateKey = config->get(ConfigField::PRIVATE_KEY);
-
     if (withSecret)
     {
-        // encrypt message
+        const MySendMessage& sendMessage = dynamic_cast<const MySendMessage&>(message);
+        sendMessage.serialize(jMessage, config->get(ConfigField::PRIVATE_KEY), crypto);
     }
+    else
+        message.serialize(jMessage);
 
-    if (client.sendMessage(payload))
+    if (client.sendMessage(jMessage.dump()))
     {
         std::string response = client.receiveMessage();
+
         chatService->handleOutgoingMessage(response);
     }
 

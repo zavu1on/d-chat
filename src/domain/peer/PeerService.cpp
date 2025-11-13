@@ -21,6 +21,19 @@ const std::vector<UserHost>& PeerService::getHosts() const { return hosts; }
 
 const std::vector<UserPeer>& PeerService::getPeers() const { return peers; }
 
+const UserPeer PeerService::findPeer(const UserHost& host)
+{
+    auto it = std::find_if(peers.begin(),
+                           peers.end(),
+                           [&host](const UserPeer& peer)
+                           { return peer.host == host.host && peer.port == host.port; });
+
+    if (it != peers.end())
+        return *it;
+    else
+        throw std::runtime_error("Peer not found");
+}
+
 void PeerService::addPeer(const UserPeer& peer)
 {
     auto el = std::find(peers.begin(), peers.end(), peer);

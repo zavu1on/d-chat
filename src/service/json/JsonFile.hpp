@@ -19,7 +19,7 @@ public:
     json read()
     {
         std::ifstream file(path);
-        if (!file.is_open()) throw std::runtime_error("Cannot open file: " + path);
+        if (!file.is_open()) throw std::runtime_error("Cannot open file");
 
         try
         {
@@ -36,6 +36,11 @@ public:
         json jData;
         for (const auto& [key, value] : data) jData[key] = value;
 
+        writeJson(jData);
+    };
+
+    void writeJson(const json& jData)
+    {
         std::ofstream file(path);
         if (!file.is_open()) throw std::runtime_error("Cannot open file for writing: " + path);
 
@@ -47,7 +52,7 @@ public:
         {
             throw std::runtime_error("Error writing JSON file: " + std::string(e.what()));
         }
-    };
+    }
 
     std::string getPath() const { return path; };
 };

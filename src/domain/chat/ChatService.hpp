@@ -9,7 +9,7 @@
 #include "IConfig.hpp"
 #include "ICrypto.hpp"
 #include "PeerService.hpp"
-
+#include "SendMessage.hpp"
 
 class ChatService
 {
@@ -22,6 +22,8 @@ private:
 protected:
     void handleIncomingConnectMessage(const ConnectMessage& message, std::string& response);
     void handleOutgoingConnectMessage(const ConnectResponseMessage& response);
+    void handleIncomingMessage(const SendMessage& message, std::string& response);
+    void handleOutgoingMessage(const SendResponseMessage& response);
     void handleIncomingDisconnectMessage(const DisconnectMessage& message, std::string& response);
     void handleOutgoingDisconnectMessage(const DisconnectResponseMessage& response);
 

@@ -7,6 +7,7 @@ add_executable(
 target_link_libraries(d-chat_main
     PRIVATE
     d-chat_ui
+    d-chat_utils
     d-chat_infra
     d-chat_service
     d-chat_domain

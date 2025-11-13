@@ -24,6 +24,24 @@ void ChatService::handleOutgoingConnectMessage(const ConnectResponseMessage& res
     peerService->addPeer({ response.from.host, response.from.port, response.from.publicKey });
 }
 
+void ChatService::handleIncomingMessage(const SendMessage& message, std::string& response)
+{
+    consoleUI->printLog("[SERVER] received message from " + message.from.host + ":" +
+                        std::to_string(message.from.port) + ": " + message.payload.message + "\n");
+
+    UserPeer me{ message.to.host, message.to.port, config->get(ConfigField::PUBLIC_KEY) };
+    uint64_t timestamp = getTimestamp();
+
+    SendResponseMessage responseMessage(me, message.from, timestamp);
+
+    json jData;
+    responseMessage.serialize(jData);
+
+    response = jData.dump();
+}
+
+void ChatService::handleOutgoingMessage(const SendResponseMessage& response) { (void)response; }
+
 void ChatService::handleIncomingDisconnectMessage(const DisconnectMessage& message,
                                                   std::string& response)
 {
@@ -63,17 +81,31 @@ void ChatService::handleIncomingMessage(const std::string& message, std::string&
 
         if (jData["type"] == Message::fromMessageTypeToString(MessageType::CONNECT))
         {
-            ConnectMessage message = ConnectMessage::fromJson(jData);
+            ConnectMessage message(jData);
             handleIncomingConnectMessage(message, response);
         }
-        if (jData["type"] == Message::fromMessageTypeToString(MessageType::DISCONNECT))
+        else if (jData["type"] == Message::fromMessageTypeToString(MessageType::SEND_MESSAGE))
         {
-            DisconnectMessage message = DisconnectMessage::fromJson(jData);
+            try
+            {
+                SendMessage message(jData, config->get(ConfigField::PRIVATE_KEY), crypto);
+                handleIncomingMessage(message, response);
+            }
+            catch (const std::exception& e)
+            {
+                consoleUI->printLog("[SERVER] error while handleing incoming message: " +
+                                    std::string(e.what()));
+            }
+        }
+        else if (jData["type"] == Message::fromMessageTypeToString(MessageType::DISCONNECT))
+        {
+            DisconnectMessage message(jData);
             handleIncomingDisconnectMessage(message, response);
         }
     }
     catch (json::exception& e)
     {
+        consoleUI->printLog("[SERVER] handle incoming message error: " + std::string(e.what()));
     }
 }
 
@@ -85,16 +117,23 @@ void ChatService::handleOutgoingMessage(const std::string& response)
 
         if (jData["type"] == Message::fromMessageTypeToString(MessageType::CONNECT_RESPONSE))
         {
-            ConnectResponseMessage response = ConnectResponseMessage::fromJson(jData);
+            ConnectResponseMessage response(jData);
             handleOutgoingConnectMessage(response);
         }
-        if (jData["type"] == Message::fromMessageTypeToString(MessageType::DISCONNECT_RESPONSE))
+        else if (jData["type"] == Message::fromMessageTypeToString(MessageType::SEND_MESSAGE))
         {
-            DisconnectResponseMessage response = DisconnectResponseMessage::fromJson(jData);
+            SendResponseMessage response(jData);
+            handleOutgoingMessage(response);
+        }
+        else if (jData["type"] ==
+                 Message::fromMessageTypeToString(MessageType::DISCONNECT_RESPONSE))
+        {
+            DisconnectResponseMessage response(jData);
             handleOutgoingDisconnectMessage(response);
         }
     }
     catch (json::exception& e)
     {
+        consoleUI->printLog("[CLIENT] handle outgoing message error: " + std::string(e.what()));
     }
 }

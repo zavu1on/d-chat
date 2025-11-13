@@ -9,7 +9,6 @@
 #include "PeerService.hpp"
 #include "SocketClient.hpp"
 
-
 class TCPClient : public IChatClient
 {
 private:
@@ -28,5 +27,5 @@ public:
               const std::shared_ptr<ConsoleUI>& consoleUI);
     ~TCPClient() override;
 
-    void sendMessage(const Message& message, bool withSecret = true) override;
+    void sendMessage(const Message& message, bool withSecret = false) override;
 };

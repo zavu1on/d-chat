@@ -7,5 +7,5 @@ class IChatClient
 public:
     virtual ~IChatClient() = default;
 
-    virtual void sendMessage(const Message& message, bool withSecret = true) = 0;
+    virtual void sendMessage(const Message& message, bool withSecret) = 0;
 };

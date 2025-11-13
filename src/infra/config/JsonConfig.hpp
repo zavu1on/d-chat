@@ -22,6 +22,6 @@ public:
     void update(ConfigField key, const std::string& value) override;
     void loadTrustedPeerList(std::vector<std::string>& trustedPeers) override;
 
-    bool isValid() const override;
+    bool isValid() override;
     void generatedDefaultConfig() override;
 };

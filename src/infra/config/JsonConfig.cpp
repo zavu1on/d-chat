@@ -5,9 +5,19 @@
 
 #include "SocketClient.hpp"
 
-JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<ICrypto> crypto) : jsonFile(path), crypto(crypto)
+JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<ICrypto> crypto)
+    : jsonFile(path), crypto(crypto)
 {
-    json jData = jsonFile.read();
+    json jData;
+    try
+    {
+        jData = jsonFile.read();
+    }
+    catch (const std::exception& e)
+    {
+        if (std::string(e.what()) == "Cannot open file") generatedDefaultConfig();
+        jData = jsonFile.read();
+    }
 
     for (json::iterator iter = jData.begin(); iter != jData.end(); ++iter)
     {
@@ -55,32 +65,28 @@ void JsonConfig::loadTrustedPeerList(std::vector<std::string>& trustedPeers)
         throw std::runtime_error("Missing 'trustedPeerList' in configuration");
 }
 
-bool JsonConfig::isValid() const
+bool JsonConfig::isValid()
 {
     for (const auto& key : CONFIG_FIELDS)
         if (!data.count(key)) return false;
 
-    return true;
+    json jData = jsonFile.read();
+    if (jData.contains("trustedPeerList") && jData["trustedPeerList"].is_array()) return true;
+
+    return false;
 }
 
 void JsonConfig::generatedDefaultConfig()
 {
     json jData;
+    KeyPair keyPair = crypto->generateKeyPair();
 
     jData["host"] = "127.0.0.1";
     jData["port"] = std::to_string(SocketClient::findFreePort());
-    jData["public_key"] = crypto->keyToString(crypto->generateSecret());
-    jData["private_key"] = crypto->keyToString(crypto->generateSecret());
+    jData["public_key"] = crypto->keyToString(keyPair.publicKey);
+    jData["private_key"] = crypto->keyToString(keyPair.privateKey);
     jData["name"] = jData["host"];
+    jData["trustedPeerList"] = json::array();
 
-    std::map<std::string, std::string> writeData;
-    for (json::iterator iter = jData.begin(); iter != jData.end(); ++iter)
-    {
-        std::string key = iter.key();
-        std::string value = iter.value().get<std::string>();
-
-        writeData[key] = value;
-    }
-
-    jsonFile.write(writeData);
+    jsonFile.writeJson(jData);
 }

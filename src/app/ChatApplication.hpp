@@ -22,6 +22,7 @@ private:
     std::shared_ptr<IChatServer> server;
     std::shared_ptr<IChatClient> client;
 
+    UserPeer from;
     std::atomic<bool> running;
 
 public:

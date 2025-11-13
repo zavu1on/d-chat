@@ -5,6 +5,7 @@ add_library(
     chat/TCPClient.cpp
     config/JsonConfig.cpp
     message/ConnectMessage.cpp
+    message/SendMessage.cpp
     message/DisconnectMessage.cpp
 )
 

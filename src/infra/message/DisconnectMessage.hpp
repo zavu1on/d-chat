@@ -4,22 +4,20 @@
 
 class DisconnectMessage : public Message
 {
-protected:
-    static void deserializeBasic(const json& json, DisconnectMessage& message);
-
 public:
     DisconnectMessage();
     DisconnectMessage(const UserPeer& from, const UserPeer& to, uint64_t timestamp);
+    DisconnectMessage(const json& json);
 
     void serialize(json& json) const override;
-    static DisconnectMessage fromJson(const json& json);
 };
 
-class DisconnectResponseMessage : public DisconnectMessage
+class DisconnectResponseMessage : public Message
 {
 public:
     DisconnectResponseMessage();
     DisconnectResponseMessage(const UserPeer& from, const UserPeer& to, uint64_t timestamp);
+    DisconnectResponseMessage(const json& json);
 
-    static DisconnectResponseMessage fromJson(const json& json);
+    void serialize(json& json) const override;
 };

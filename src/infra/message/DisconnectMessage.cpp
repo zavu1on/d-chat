@@ -1,12 +1,5 @@
 #include "DisconnectMessage.hpp"
 
-void DisconnectMessage::deserializeBasic(const json& json, DisconnectMessage& message)
-{
-    message.from = UserPeer(json["from"]);
-    message.to = UserPeer(json["to"]);
-    message.timestamp = json["timestamp"].get<uint64_t>();
-}
-
 DisconnectMessage::DisconnectMessage() : Message() {}
 
 DisconnectMessage::DisconnectMessage(const UserPeer& from, const UserPeer& to, uint64_t timestamp)
@@ -14,36 +7,25 @@ DisconnectMessage::DisconnectMessage(const UserPeer& from, const UserPeer& to, u
 {
 }
 
-void DisconnectMessage::serialize(json& json) const { json = getBasicSerialization(); }
-
-DisconnectMessage DisconnectMessage::fromJson(const json& json)
+DisconnectMessage::DisconnectMessage(const json& json) : Message(json)
 {
-    if (json["type"] != Message::fromMessageTypeToString(MessageType::DISCONNECT))
-        throw std::runtime_error("Invalid message type");
-
-    DisconnectMessage message;
-    deserializeBasic(json, message);
-
-    return message;
+    if (type != MessageType::DISCONNECT) throw std::runtime_error("Invalid message type");
 }
 
-DisconnectResponseMessage::DisconnectResponseMessage() : DisconnectMessage() {}
+void DisconnectMessage::serialize(json& json) const { json = getBasicSerialization(); }
+
+DisconnectResponseMessage::DisconnectResponseMessage() : Message() {}
 
 DisconnectResponseMessage::DisconnectResponseMessage(const UserPeer& from,
                                                      const UserPeer& to,
                                                      uint64_t timestamp)
-    : DisconnectMessage(from, to, timestamp)
+    : Message(MessageType::DISCONNECT_RESPONSE, from, to, timestamp)
 {
-    type = MessageType::DISCONNECT_RESPONSE;
 }
 
-DisconnectResponseMessage DisconnectResponseMessage::fromJson(const json& json)
+DisconnectResponseMessage::DisconnectResponseMessage(const json& json) : Message(json)
 {
-    if (json["type"] != Message::fromMessageTypeToString(MessageType::DISCONNECT_RESPONSE))
-        throw std::runtime_error("Invalid message type");
-
-    DisconnectResponseMessage message;
-    deserializeBasic(json, message);
-
-    return message;
+    if (type != MessageType::DISCONNECT_RESPONSE) throw std::runtime_error("Invalid message type");
 }
+
+void DisconnectResponseMessage::serialize(json& json) const { json = getBasicSerialization(); }
