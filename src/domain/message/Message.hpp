@@ -39,9 +39,9 @@ public:
             const peer::UserPeer& from,
             const peer::UserPeer& to,
             uint64_t timestamp);
-    Message(const json& json);
+    Message(const json& jData);
     virtual ~Message() = default;
-    virtual void serialize(json& json) const = 0;
+    virtual void serialize(json& jData) const = 0;
 
     static std::string fromMessageTypeToString(MessageType type);
     static MessageType fromStringToMessageType(const std::string& type);
@@ -50,7 +50,7 @@ public:
 class SecretMessage : public Message
 {
 private:
-    void serialize(json& json) const final;
+    void serialize(json& jData) const final;
 
 protected:
     crypto::Bytes signature;
@@ -62,9 +62,9 @@ public:
                   const peer::UserPeer& to,
                   uint64_t timestamp,
                   const crypto::Bytes& signature);
-    SecretMessage(const json& json, std::shared_ptr<crypto::ICrypto> crypto);
+    SecretMessage(const json& jData, std::shared_ptr<crypto::ICrypto> crypto);
 
-    virtual void serialize(json& json,
+    virtual void serialize(json& jData,
                            const std::string& privateKey,
                            std::shared_ptr<crypto::ICrypto> crypto) const = 0;
 };

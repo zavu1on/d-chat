@@ -24,12 +24,12 @@ Message::Message(MessageType type,
 {
 }
 
-Message::Message(const json& json)
+Message::Message(const json& jData)
 {
-    from = peer::UserPeer(json["from"]);
-    to = peer::UserPeer(json["to"]);
-    timestamp = json["timestamp"].get<uint64_t>();
-    type = Message::fromStringToMessageType(json["type"].get<std::string>());
+    from = peer::UserPeer(jData["from"]);
+    to = peer::UserPeer(jData["to"]);
+    timestamp = jData["timestamp"].get<uint64_t>();
+    type = Message::fromStringToMessageType(jData["type"].get<std::string>());
 }
 
 std::string Message::fromMessageTypeToString(MessageType type)
@@ -74,9 +74,9 @@ MessageType Message::fromStringToMessageType(const std::string& type)
     throw std::runtime_error("Unknown message type");
 }
 
-void SecretMessage::serialize(json& json) const
+void SecretMessage::serialize(json& jData) const
 {
-    (void)json;
+    (void)jData;
     throw std::logic_error(
         "This method is not accessible. SecretMessage requires session key for serialization");
 }
@@ -92,9 +92,9 @@ SecretMessage::SecretMessage(MessageType type,
 {
 }
 
-SecretMessage::SecretMessage(const json& json, std::shared_ptr<crypto::ICrypto> crypto)
-    : Message(json)
+SecretMessage::SecretMessage(const json& jData, std::shared_ptr<crypto::ICrypto> crypto)
+    : Message(jData)
 {
-    signature = crypto->stringToKey(json["signature"].get<std::string>());
+    signature = crypto->stringToKey(jData["signature"].get<std::string>());
 }
 }  // namespace message

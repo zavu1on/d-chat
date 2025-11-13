@@ -23,16 +23,16 @@ TextMessage::TextMessage(const peer::UserPeer& from,
 {
 }
 
-TextMessage::TextMessage(const json& json,
+TextMessage::TextMessage(const json& jData,
                          const std::string& privateKey,
                          std::shared_ptr<crypto::ICrypto> crypto)
-    : SecretMessage(json, crypto), payload{}
+    : SecretMessage(jData, crypto), payload{}
 {
     if (type != MessageType::TEXT_MESSAGE) throw std::runtime_error("Invalid message type");
 
     crypto::Bytes sessionKey = createSessionKey(privateKey, from.publicKey, crypto);
 
-    crypto::Bytes cipher = crypto->stringToKey(json["payload"]["message"].get<std::string>());
+    crypto::Bytes cipher = crypto->stringToKey(jData["payload"]["message"].get<std::string>());
     crypto::Bytes plain = crypto->decrypt(cipher, sessionKey);
     crypto::Bytes publicKeyBytes = crypto->stringToKey(from.publicKey);
 
@@ -42,7 +42,7 @@ TextMessage::TextMessage(const json& json,
     payload.message = std::string(plain.begin(), plain.end());
 }
 
-void TextMessage::serialize(json& json,
+void TextMessage::serialize(json& jData,
                             const std::string& privateKey,
                             std::shared_ptr<crypto::ICrypto> crypto) const
 {
@@ -53,9 +53,9 @@ void TextMessage::serialize(json& json,
     crypto::Bytes privateKeyBytes = crypto->stringToKey(privateKey);
     crypto::Bytes signatureBytes = crypto->sign(plain, privateKeyBytes);
 
-    json = getBasicSerialization();
-    json["payload"]["message"] = crypto->keyToString(encryptedMessage);
-    json["signature"] = crypto->keyToString(signatureBytes);
+    jData = getBasicSerialization();
+    jData["payload"]["message"] = crypto->keyToString(encryptedMessage);
+    jData["signature"] = crypto->keyToString(signatureBytes);
 }
 
 TextMessageResponse::TextMessageResponse() : Message() {}
@@ -67,7 +67,7 @@ TextMessageResponse::TextMessageResponse(const peer::UserPeer& from,
 {
 }
 
-TextMessageResponse::TextMessageResponse(const json& json) : Message(json) {}
+TextMessageResponse::TextMessageResponse(const json& jData) : Message(jData) {}
 
-void TextMessageResponse::serialize(json& json) const { json = getBasicSerialization(); }
+void TextMessageResponse::serialize(json& jData) const { jData = getBasicSerialization(); }
 }  // namespace message

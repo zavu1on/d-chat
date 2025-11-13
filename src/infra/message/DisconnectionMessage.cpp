@@ -11,12 +11,12 @@ DisconnectionMessage::DisconnectionMessage(const peer::UserPeer& from,
 {
 }
 
-DisconnectionMessage::DisconnectionMessage(const json& json) : Message(json)
+DisconnectionMessage::DisconnectionMessage(const json& jData) : Message(jData)
 {
     if (type != MessageType::DISCONNECT) throw std::runtime_error("Invalid message type");
 }
 
-void DisconnectionMessage::serialize(json& json) const { json = getBasicSerialization(); }
+void DisconnectionMessage::serialize(json& jData) const { jData = getBasicSerialization(); }
 
 DisconnectionMessageResponse::DisconnectionMessageResponse() : Message() {}
 
@@ -27,10 +27,10 @@ DisconnectionMessageResponse::DisconnectionMessageResponse(const peer::UserPeer&
 {
 }
 
-DisconnectionMessageResponse::DisconnectionMessageResponse(const json& json) : Message(json)
+DisconnectionMessageResponse::DisconnectionMessageResponse(const json& jData) : Message(jData)
 {
     if (type != MessageType::DISCONNECT_RESPONSE) throw std::runtime_error("Invalid message type");
 }
 
-void DisconnectionMessageResponse::serialize(json& json) const { json = getBasicSerialization(); }
+void DisconnectionMessageResponse::serialize(json& jData) const { jData = getBasicSerialization(); }
 }  // namespace message

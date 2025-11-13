@@ -24,7 +24,7 @@ public:
 
     UserPeer();
     UserPeer(const std::string& host, unsigned short port, const std::string& publicKey);
-    UserPeer(const json& json);
+    UserPeer(const json& jData);
     json toJson() const;
 
     bool operator==(const UserPeer& other) const;

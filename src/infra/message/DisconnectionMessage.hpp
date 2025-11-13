@@ -13,9 +13,9 @@ class DisconnectionMessage : public Message
 public:
     DisconnectionMessage();
     DisconnectionMessage(const peer::UserPeer& from, const peer::UserPeer& to, uint64_t timestamp);
-    DisconnectionMessage(const json& json);
+    DisconnectionMessage(const json& jData);
 
-    void serialize(json& json) const override;
+    void serialize(json& jData) const override;
 };
 
 class DisconnectionMessageResponse : public Message
@@ -25,8 +25,8 @@ public:
     DisconnectionMessageResponse(const peer::UserPeer& from,
                                  const peer::UserPeer& to,
                                  uint64_t timestamp);
-    DisconnectionMessageResponse(const json& json);
+    DisconnectionMessageResponse(const json& jData);
 
-    void serialize(json& json) const override;
+    void serialize(json& jData) const override;
 };
 }  // namespace message

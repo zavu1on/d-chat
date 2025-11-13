@@ -28,11 +28,11 @@ public:
                 const peer::UserPeer& to,
                 uint64_t timestamp,
                 const std::string& message);
-    TextMessage(const json& json,
+    TextMessage(const json& jData,
                 const std::string& privateKey,
                 std::shared_ptr<crypto::ICrypto> crypto);
 
-    void serialize(json& json,
+    void serialize(json& jData,
                    const std::string& privateKey,
                    std::shared_ptr<crypto::ICrypto> crypto) const override;
 };
@@ -42,8 +42,8 @@ class TextMessageResponse : public Message
 public:
     TextMessageResponse();
     TextMessageResponse(const peer::UserPeer& from, const peer::UserPeer& to, uint64_t timestamp);
-    TextMessageResponse(const json& json);
+    TextMessageResponse(const json& jData);
 
-    void serialize(json& json) const override;
+    void serialize(json& jData) const override;
 };
 }  // namespace message

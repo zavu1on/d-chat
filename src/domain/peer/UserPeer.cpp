@@ -13,10 +13,10 @@ UserPeer::UserPeer(const std::string& host, unsigned short port, const std::stri
 {
 }
 
-UserPeer::UserPeer(const json& json)
-    : UserHost(json["host"].get<std::string>(), json["port"].get<unsigned short>())
+UserPeer::UserPeer(const json& jData)
+    : UserHost(jData["host"].get<std::string>(), jData["port"].get<unsigned short>())
 {
-    publicKey = json["public_key"].get<std::string>();
+    publicKey = jData["public_key"].get<std::string>();
 }
 
 json UserPeer::toJson() const

@@ -11,12 +11,12 @@ ConnectionMessage::ConnectionMessage(const peer::UserPeer& from,
 {
 }
 
-ConnectionMessage::ConnectionMessage(const json& json) : Message(json)
+ConnectionMessage::ConnectionMessage(const json& jData) : Message(jData)
 {
     if (type != MessageType::CONNECT) throw std::runtime_error("Invalid message type");
 }
 
-void ConnectionMessage::serialize(json& json) const { json = getBasicSerialization(); }
+void ConnectionMessage::serialize(json& jData) const { jData = getBasicSerialization(); }
 
 ConnectionMessageResponse::ConnectionMessageResponse() : Message() {}
 
@@ -27,10 +27,10 @@ ConnectionMessageResponse::ConnectionMessageResponse(const peer::UserPeer& from,
 {
 }
 
-ConnectionMessageResponse::ConnectionMessageResponse(const json& json) : Message(json)
+ConnectionMessageResponse::ConnectionMessageResponse(const json& jData) : Message(jData)
 {
     if (type != MessageType::CONNECT_RESPONSE) throw std::runtime_error("Invalid message type");
 }
 
-void ConnectionMessageResponse::serialize(json& json) const { json = getBasicSerialization(); }
+void ConnectionMessageResponse::serialize(json& jData) const { jData = getBasicSerialization(); }
 }  // namespace message

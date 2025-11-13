@@ -14,9 +14,9 @@ class ConnectionMessage : public Message
 public:
     ConnectionMessage();
     ConnectionMessage(const peer::UserPeer& from, const peer::UserPeer& to, uint64_t timestamp);
-    ConnectionMessage(const json& json);
+    ConnectionMessage(const json& jData);
 
-    void serialize(json& json) const override;
+    void serialize(json& jData) const override;
 };
 
 class ConnectionMessageResponse : public Message
@@ -26,8 +26,8 @@ public:
     ConnectionMessageResponse(const peer::UserPeer& from,
                               const peer::UserPeer& to,
                               uint64_t timestamp);
-    ConnectionMessageResponse(const json& json);
+    ConnectionMessageResponse(const json& jData);
 
-    void serialize(json& json) const override;
+    void serialize(json& jData) const override;
 };
 }  // namespace message

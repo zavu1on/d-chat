@@ -1,6 +1,7 @@
 #include "TCPClient.hpp"
 
 #include "DisconnectionMessage.hpp"
+#include "SocketServer.hpp"
 #include "timestamp.hpp"
 
 namespace network
@@ -62,6 +63,8 @@ void TCPClient::sendMessage(const message::Message& message, bool withSecret)
     }
     else
         message.serialize(jMessage);
+
+    if (jMessage.size() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
 
     if (client.sendMessage(jMessage.dump()))
     {

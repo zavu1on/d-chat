@@ -1,8 +1,8 @@
 add_library(
     d-chat_infra
     STATIC
-    chat/TCPServer.cpp
-    chat/TCPClient.cpp
+    network/TCPServer.cpp
+    network/TCPClient.cpp
     config/JsonConfig.cpp
     message/ConnectionMessage.cpp
     message/TextMessage.cpp
@@ -20,7 +20,7 @@ target_link_libraries(
 target_include_directories(
     d-chat_infra 
     PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/chat
+    ${CMAKE_CURRENT_SOURCE_DIR}/network
     ${CMAKE_CURRENT_SOURCE_DIR}/config
     ${CMAKE_CURRENT_SOURCE_DIR}/message
 )
