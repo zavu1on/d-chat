@@ -18,14 +18,14 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
       peerService(peerService),
       consoleUI(consoleUI)
 {
-    const std::vector<peer::UserHost>& hosts = peerService->getHosts();
+    std::vector<peer::UserHost> hosts = peerService->getHosts();
 
     std::string host = config->get(config::ConfigField::HOST);
     u_short port = static_cast<u_short>(std::stoi(config->get(config::ConfigField::PORT)));
+    peer::UserPeer from{ host, port, config->get(config::ConfigField::PUBLIC_KEY) };
 
     for (const auto& userHost : hosts)
     {
-        peer::UserPeer from{ host, port, config->get(config::ConfigField::PUBLIC_KEY) };
         peer::UserPeer to{ userHost.host, userHost.port, "" };
         u_int64 timestamp = utils::getTimestamp();
 
@@ -34,18 +34,19 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
     }
 }
 
-TCPClient::~TCPClient()
+void TCPClient::connectToAllPeers()
 {
+    std::vector<peer::UserPeer> peers = peerService->getPeers();
+
     std::string host = config->get(config::ConfigField::HOST);
     u_short port = static_cast<u_short>(std::stoi(config->get(config::ConfigField::PORT)));
-    std::string publicKey = config->get(config::ConfigField::PUBLIC_KEY);
+    peer::UserPeer from{ host, port, config->get(config::ConfigField::PUBLIC_KEY) };
 
-    peer::UserPeer from{ host, port, publicKey };
-    const std::vector<peer::UserPeer>& peers = peerService->getPeers();
-
-    for (const auto& peer : peers)
+    for (const auto& to : peers)
     {
-        message::DisconnectionMessage message(from, peer, utils::getTimestamp());
+        u_int64 timestamp = utils::getTimestamp();
+
+        message::ConnectionMessage message(from, to, timestamp);
         sendMessage(message);
     }
 }
@@ -75,5 +76,21 @@ void TCPClient::sendMessage(const message::Message& message, bool withSecret)
     }
 
     client.disconnect();
+}
+
+void TCPClient::disconnect()
+{
+    std::string host = config->get(config::ConfigField::HOST);
+    u_short port = static_cast<u_short>(std::stoi(config->get(config::ConfigField::PORT)));
+    std::string publicKey = config->get(config::ConfigField::PUBLIC_KEY);
+
+    peer::UserPeer from{ host, port, publicKey };
+    std::vector<peer::UserPeer> peers = peerService->getPeers();
+
+    for (const auto& peer : peers)
+    {
+        message::DisconnectionMessage message(from, peer, utils::getTimestamp());
+        sendMessage(message);
+    }
 }
 }  // namespace network

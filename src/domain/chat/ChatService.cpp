@@ -93,10 +93,7 @@ void ChatService::handleIncomingMessage(const message::TextMessage& message, std
     response = jData.dump();
 }
 
-void ChatService::handleOutgoingMessage(const message::TextMessageResponse& response)
-{
-    (void)response;
-}
+void ChatService::handleOutgoingMessage(const message::TextMessageResponse&) {}
 
 void ChatService::handleIncomingPeerListMessage(const message::PeerListMessage& message,
                                                 std::string& response)
@@ -159,10 +156,8 @@ void ChatService::handleIncomingDisconnectionMessage(const message::Disconnectio
                         "\n");
 }
 
-void ChatService::handleOutgoingDisconnectionMessage(
-    const message::DisconnectionMessageResponse& response)
+void ChatService::handleOutgoingDisconnectionMessage(const message::DisconnectionMessageResponse&)
 {
-    (void)response;
 }
 
 ChatService::ChatService(const std::shared_ptr<config::IConfig>& config,

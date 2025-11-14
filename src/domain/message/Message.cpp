@@ -85,9 +85,8 @@ MessageType Message::fromStringToMessageType(const std::string& type)
     throw std::runtime_error("Unknown message type");
 }
 
-void SecretMessage::serialize(json& jData) const
+void SecretMessage::serialize(json&) const
 {
-    (void)jData;
     throw std::logic_error(
         "This method is not accessible. SecretMessage requires session key for serialization");
 }

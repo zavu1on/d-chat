@@ -30,8 +30,9 @@ public:
               const std::shared_ptr<chat::ChatService>& chatService,
               const std::shared_ptr<peer::PeerService>& peerService,
               const std::shared_ptr<ui::ConsoleUI>& consoleUI);
-    ~TCPClient() override;
 
+    void connectToAllPeers() override;
     void sendMessage(const message::Message& message, bool withSecret = false) override;
+    void disconnect() override;
 };
 }  // namespace network

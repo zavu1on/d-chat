@@ -8,7 +8,11 @@ namespace app
 {
 const u_int PEERS_BATCH_SIZE = 4;
 
-ChatApplication::~ChatApplication() { server->stop(); }
+ChatApplication::~ChatApplication()
+{
+    server->stop();
+    client->disconnect();
+}
 
 void ChatApplication::init()
 {
@@ -51,14 +55,16 @@ void ChatApplication::init()
         u_int start = 0;
         u_int end = peersToReceive > PEERS_BATCH_SIZE ? PEERS_BATCH_SIZE : peersToReceive;
 
-        while (end < peersToReceive)
+        do
         {
             message::PeerListMessage message(from, to, utils::getTimestamp(), start, end);
             client->sendMessage(message, false);
             start += PEERS_BATCH_SIZE;
             end += PEERS_BATCH_SIZE;
-        }
+        } while (end < peersToReceive);
     }
+
+    client->connectToAllPeers();
 }
 
 void ChatApplication::run()
