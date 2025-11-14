@@ -13,6 +13,7 @@ using json = nlohmann::json;
 enum class MessageType
 {
     NONE,
+    ERROR_RESPONSE,
     CONNECT,
     CONNECT_RESPONSE,
     PEER_LIST,
@@ -27,13 +28,12 @@ class Message
 {
 protected:
     virtual json getBasicSerialization() const;
-
-public:
     MessageType type;
     peer::UserPeer from;
     peer::UserPeer to;
     uint64_t timestamp;
 
+public:
     Message();
     Message(MessageType type,
             const peer::UserPeer& from,
@@ -42,6 +42,11 @@ public:
     Message(const json& jData);
     virtual ~Message() = default;
     virtual void serialize(json& jData) const = 0;
+
+    MessageType getType() const;
+    const peer::UserPeer& getFrom() const;
+    const peer::UserPeer& getTo() const;
+    uint64_t getTimestamp() const;
 
     static std::string fromMessageTypeToString(MessageType type);
     static MessageType fromStringToMessageType(const std::string& type);
@@ -63,6 +68,8 @@ public:
                   uint64_t timestamp,
                   const crypto::Bytes& signature);
     SecretMessage(const json& jData, std::shared_ptr<crypto::ICrypto> crypto);
+
+    const crypto::Bytes& getSignature() const;
 
     virtual void serialize(json& jData,
                            const std::string& privateKey,

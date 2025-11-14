@@ -20,9 +20,10 @@ private:
                                    const std::string& publicKey,
                                    std::shared_ptr<crypto::ICrypto> crypto) const;
 
-public:
+protected:
     TextMessagePayload payload;
 
+public:
     TextMessage();
     TextMessage(const peer::UserPeer& from,
                 const peer::UserPeer& to,
@@ -35,6 +36,7 @@ public:
     void serialize(json& jData,
                    const std::string& privateKey,
                    std::shared_ptr<crypto::ICrypto> crypto) const override;
+    const TextMessagePayload& getPayload() const;
 };
 
 class TextMessageResponse : public Message

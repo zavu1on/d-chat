@@ -11,8 +11,8 @@ add_library(
 )
 
 
-set(nlohmann_json_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows/share/nlohmann_json")
-set(OPENSSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-windows/share/openssl")
+# set(nlohmann_json_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-mingw-static/share/nlohmann_json")
+# set(OPENSSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-mingw-static/share/openssl")
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenSSL CONFIG REQUIRED)
 

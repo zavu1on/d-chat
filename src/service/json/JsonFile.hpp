@@ -27,9 +27,9 @@ public:
         {
             return json::parse(file);
         }
-        catch (const std::exception& e)
+        catch (const std::exception& error)
         {
-            throw std::runtime_error("Error reading JSON file: " + std::string(e.what()));
+            throw std::runtime_error("Error reading JSON file: " + std::string(error.what()));
         }
     };
 
@@ -50,9 +50,9 @@ public:
         {
             file << std::setw(4) << jData;
         }
-        catch (const std::exception& e)
+        catch (const std::exception& error)
         {
-            throw std::runtime_error("Error writing JSON file: " + std::string(e.what()));
+            throw std::runtime_error("Error writing JSON file: " + std::string(error.what()));
         }
     }
 

@@ -3,7 +3,7 @@ setlocal ENABLEDELAYEDEXPANSION
 
 set "PROJECT_NAME=d-chat"
 set "BUILD_DIR=build"
-set "TOOLCHAIN_PATH=C:\Program Files\vcpkg\scripts\buildsystems\vcpkg.cmake"
+set "TOOLCHAIN_PATH=C:\vcpkg\scripts\buildsystems\vcpkg.cmake"
 set "GENERATOR=Ninja"
 
 set "MINGW_PATH=C:\msys64\mingw64\bin"
@@ -56,7 +56,7 @@ cmake -S . -B "%BUILD_DIR%" ^
   -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN_PATH%" ^
   -DCMAKE_C_COMPILER="%CC%" ^
   -DCMAKE_CXX_COMPILER="%CXX%" ^
-  -DVCPKG_TARGET_TRIPLET=x64-windows ^
+  -DVCPKG_TARGET_TRIPLET=x64-mingw-static ^
   %EXTRA_CMAKE_ARGS%
 if errorlevel 1 (
   echo [ERROR] CMake configuration failed.

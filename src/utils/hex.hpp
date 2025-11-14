@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-namespace utils {
+namespace utils
+{
 
 inline std::string to_hex(const std::vector<uint8_t>& data)
 {
@@ -25,5 +26,4 @@ inline std::vector<uint8_t> from_hex(const std::string& hex)
     }
     return out;
 }
-
-} // namespace utils
+}  // namespace utils

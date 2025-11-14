@@ -32,12 +32,22 @@ Message::Message(const json& jData)
     type = Message::fromStringToMessageType(jData["type"].get<std::string>());
 }
 
+MessageType Message::getType() const { return type; }
+
+const peer::UserPeer& Message::getFrom() const { return from; }
+
+const peer::UserPeer& Message::getTo() const { return to; }
+
+uint64_t Message::getTimestamp() const { return timestamp; }
+
 std::string Message::fromMessageTypeToString(MessageType type)
 {
     switch (type)
     {
         case MessageType::NONE:
             return "NONE";
+        case MessageType::ERROR_RESPONSE:
+            return "ERROR_RESPONSE";
         case MessageType::CONNECT:
             return "CONNECT";
         case MessageType::CONNECT_RESPONSE:
@@ -62,6 +72,7 @@ std::string Message::fromMessageTypeToString(MessageType type)
 MessageType Message::fromStringToMessageType(const std::string& type)
 {
     if (type == "NONE") return MessageType::NONE;
+    if (type == "ERROR_RESPONSE") return MessageType::ERROR_RESPONSE;
     if (type == "CONNECT") return MessageType::CONNECT;
     if (type == "CONNECT_RESPONSE") return MessageType::CONNECT_RESPONSE;
     if (type == "PEER_LIST") return MessageType::PEER_LIST;
@@ -97,4 +108,5 @@ SecretMessage::SecretMessage(const json& jData, std::shared_ptr<crypto::ICrypto>
 {
     signature = crypto->stringToKey(jData["signature"].get<std::string>());
 }
+const crypto::Bytes& SecretMessage::getSignature() const { return signature; }
 }  // namespace message

@@ -26,7 +26,7 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
     for (const auto& userHost : hosts)
     {
         peer::UserPeer from{ host, port, config->get(config::ConfigField::PUBLIC_KEY) };
-        peer::UserPeer to{ userHost.host, userHost.port, "null" };
+        peer::UserPeer to{ userHost.host, userHost.port, "" };
         u_int64 timestamp = utils::getTimestamp();
 
         message::ConnectionMessage message(from, to, timestamp);
@@ -52,7 +52,8 @@ TCPClient::~TCPClient()
 
 void TCPClient::sendMessage(const message::Message& message, bool withSecret)
 {
-    client.connectTo(message.to.host, message.to.port);
+    peer::UserPeer to = message.getTo();
+    client.connectTo(to.host, to.port);
 
     json jMessage;
     if (withSecret)

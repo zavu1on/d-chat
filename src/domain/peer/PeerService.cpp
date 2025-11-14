@@ -1,6 +1,8 @@
 #include "PeerService.hpp"
 
+#include <algorithm>
 #include <iostream>
+#include <mutex>
 
 namespace peer
 {
@@ -15,16 +17,33 @@ PeerService::PeerService(std::vector<std::string>& hosts)
         std::string host = trustedPeer.substr(0, sepPos);
         unsigned short port = std::stoul(trustedPeer.substr(sepPos + 1));
 
-        this->hosts.push_back(UserHost(host, port));
+        this->hosts.emplace_back(host, port);
     }
 }
 
 const std::vector<UserHost>& PeerService::getHosts() const { return hosts; }
 
-const std::vector<UserPeer>& PeerService::getPeers() const { return peers; }
-
-const UserPeer PeerService::findPeer(const UserHost& host)
+std::vector<UserPeer> PeerService::getPeers() const
 {
+    std::shared_lock lock(mutex);
+    return peers;
+}
+
+int PeerService::getPeersCount() const
+{
+    std::shared_lock lock(mutex);
+    return peers.size();
+}
+
+UserPeer PeerService::getPeer(size_t index) const
+{
+    std::shared_lock lock(mutex);
+    return peers[index];
+}
+
+UserPeer PeerService::findPeer(const UserHost& host) const
+{
+    std::shared_lock lock(mutex);
     auto it = std::find_if(peers.begin(),
                            peers.end(),
                            [&host](const UserPeer& peer)
@@ -33,18 +52,20 @@ const UserPeer PeerService::findPeer(const UserHost& host)
     if (it != peers.end())
         return *it;
     else
-        throw std::runtime_error("Peer not found");
+        throw std::range_error("Peer not found");
 }
 
 void PeerService::addPeer(const UserPeer& peer)
 {
-    auto el = std::find(peers.begin(), peers.end(), peer);
-    if (el == peers.end()) peers.push_back(peer);
+    std::unique_lock lock(mutex);
+    auto it = std::find(peers.begin(), peers.end(), peer);
+    if (it == peers.end()) peers.push_back(peer);
 }
 
 void PeerService::removePeer(const UserPeer& peer)
 {
-    auto el = std::find(peers.begin(), peers.end(), peer);
-    if (el != peers.end()) peers.erase(el);
+    std::unique_lock lock(mutex);
+    auto it = std::find(peers.begin(), peers.end(), peer);
+    if (it != peers.end()) peers.erase(it);
 }
 }  // namespace peer

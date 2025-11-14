@@ -7,8 +7,10 @@
 #include "ConnectionMessage.hpp"
 #include "ConsoleUI.hpp"
 #include "DisconnectionMessage.hpp"
+#include "ErrorMessage.hpp"
 #include "IConfig.hpp"
 #include "ICrypto.hpp"
+#include "PeerListMessage.hpp"
 #include "PeerService.hpp"
 #include "TextMessage.hpp"
 
@@ -25,11 +27,18 @@ private:
     std::shared_ptr<ui::ConsoleUI> consoleUI;
 
 protected:
+    void handleIncomingErrorMessage(const json& jData,
+                                    const std::string& error,
+                                    std::string& response);
+    void handleOutgoingErrorMessage(const message::ErrorMessageResponse& response);
     void handleIncomingConnectionMessage(const message::ConnectionMessage& message,
                                          std::string& response);
     void handleOutgoingConnectionMessage(const message::ConnectionMessageResponse& response);
     void handleIncomingMessage(const message::TextMessage& message, std::string& response);
     void handleOutgoingMessage(const message::TextMessageResponse& response);
+    void handleIncomingPeerListMessage(const message::PeerListMessage& message,
+                                       std::string& response);
+    void handleOutgoingPeerListMessage(const message::PeerListMessageResponse& response);
     void handleIncomingDisconnectionMessage(const message::DisconnectionMessage& message,
                                             std::string& response);
     void handleOutgoingDisconnectionMessage(const message::DisconnectionMessageResponse& response);

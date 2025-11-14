@@ -16,9 +16,9 @@ JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<crypto::ICrypto>
     {
         jData = jsonFile.read();
     }
-    catch (const std::exception& e)
+    catch (const std::exception& error)
     {
-        if (std::string(e.what()) == "Cannot open file") generatedDefaultConfig();
+        if (std::string(error.what()) == "Cannot open file") generatedDefaultConfig();
         jData = jsonFile.read();
     }
 

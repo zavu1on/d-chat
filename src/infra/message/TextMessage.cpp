@@ -58,6 +58,8 @@ void TextMessage::serialize(json& jData,
     jData["signature"] = crypto->keyToString(signatureBytes);
 }
 
+const TextMessagePayload& TextMessage::getPayload() const { return payload; }
+
 TextMessageResponse::TextMessageResponse() : Message() {}
 
 TextMessageResponse::TextMessageResponse(const peer::UserPeer& from,

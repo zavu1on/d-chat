@@ -1,10 +1,13 @@
 #include "ChatApplication.hpp"
 
+#include "GlobalState.hpp"
 #include "TextMessage.hpp"
 #include "timestamp.hpp"
 
 namespace app
 {
+const u_int PEERS_BATCH_SIZE = 4;
+
 ChatApplication::~ChatApplication() { server->stop(); }
 
 void ChatApplication::init()
@@ -39,6 +42,23 @@ void ChatApplication::init()
     server = std::make_shared<network::TCPServer>(port, chatService);
     client =
         std::make_shared<network::TCPClient>(config, crypto, chatService, peerService, consoleUI);
+
+    if (peerService->getPeersCount() > 0)
+    {
+        config::GlobalState& globalState = config::GlobalState::getInstance();
+        u_int peersToReceive = globalState.getPeersToReceive();
+        peer::UserPeer to = peerService->getPeer(0);
+        u_int start = 0;
+        u_int end = peersToReceive > PEERS_BATCH_SIZE ? PEERS_BATCH_SIZE : peersToReceive;
+
+        while (end < peersToReceive)
+        {
+            message::PeerListMessage message(from, to, utils::getTimestamp(), start, end);
+            client->sendMessage(message, false);
+            start += PEERS_BATCH_SIZE;
+            end += PEERS_BATCH_SIZE;
+        }
+    }
 }
 
 void ChatApplication::run()
@@ -104,9 +124,9 @@ void ChatApplication::run()
                     message::TextMessage sendMessage(from, to, timestamp, message);
                     client->sendMessage(sendMessage, true);
                 }
-                catch (std::exception& e)
+                catch (std::exception& error)
                 {
-                    consoleUI->printLog("[ERROR] " + std::string(e.what()));
+                    consoleUI->printLog("[ERROR] " + std::string(error.what()));
                 }
             }
             else

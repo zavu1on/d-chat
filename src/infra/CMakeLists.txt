@@ -3,10 +3,13 @@ add_library(
     STATIC
     network/TCPServer.cpp
     network/TCPClient.cpp
+    config/GlobalState.cpp
     config/JsonConfig.cpp
     message/ConnectionMessage.cpp
     message/TextMessage.cpp
     message/DisconnectionMessage.cpp
+    message/ErrorMessage.cpp
+    message/PeerListMessage.cpp
 )
 
 target_link_libraries(
