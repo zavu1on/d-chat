@@ -1,7 +1,4 @@
-<video controls width="720">
-  <source src="./d-chat.mp4" type="video/mp4">
-  Your viewer does not support inline video. Download the demo: [d-chat.mp4](./d-chat.mp4)
-</video>
+![Demo](d-chat.mp4)
 
 # d-chat — Decentralized TCP Chat with Blockchain Messages
 
