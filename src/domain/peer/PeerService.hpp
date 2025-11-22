@@ -1,8 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <shared_mutex>
 #include <vector>
 
+#include "IPeerRepo.hpp"
 #include "UserPeer.hpp"
 
 namespace peer
@@ -13,9 +15,10 @@ private:
     std::vector<UserHost> hosts;
     std::vector<UserPeer> peers;
     mutable std::shared_mutex mutex;
+    std::shared_ptr<peer::IPeerRepo> peerRepo;
 
 public:
-    PeerService(std::vector<std::string>& hosts);
+    PeerService(std::vector<std::string>& hosts, const std::shared_ptr<peer::IPeerRepo>& peerRepo);
 
     const std::vector<UserHost>& getHosts() const;
 
@@ -25,5 +28,9 @@ public:
     UserPeer findPeer(const UserHost& host) const;
     void addPeer(const UserPeer& peer);
     void removePeer(const UserPeer& peer);
+
+    void getAllChatPeers(std::vector<UserPeer>& peers);
+    void addChatPeer(const UserPeer& peer);
+    bool findPublicKeyByUserHost(const UserHost& host, std::string& publicKey);
 };
 }  // namespace peer

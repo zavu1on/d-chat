@@ -4,7 +4,7 @@ namespace message
 {
 crypto::Bytes TextMessage::createSessionKey(const std::string& privateKey,
                                             const std::string& publicKey,
-                                            std::shared_ptr<crypto::ICrypto> crypto) const
+                                            const std::shared_ptr<crypto::ICrypto>& crypto) const
 {
     crypto::Bytes privateKeyBytes = crypto->stringToKey(privateKey);
     crypto::Bytes publicKeyBytes = crypto->stringToKey(publicKey);
@@ -14,23 +14,27 @@ crypto::Bytes TextMessage::createSessionKey(const std::string& privateKey,
 
 TextMessage::TextMessage() : SecretMessage(), payload() {}
 
-TextMessage::TextMessage(const peer::UserPeer& from,
+TextMessage::TextMessage(const std::string& id,
+                         const peer::UserPeer& from,
                          const peer::UserPeer& to,
                          uint64_t timestamp,
-                         const std::string& message)
-    : SecretMessage(MessageType::TEXT_MESSAGE, from, to, timestamp, crypto::Bytes()),
+                         const std::string& message,
+                         const std::string& blockHash)
+    : SecretMessage(id, MessageType::TEXT_MESSAGE, from, to, timestamp, crypto::Bytes(), blockHash),
       payload{ message }
 {
 }
 
 TextMessage::TextMessage(const json& jData,
                          const std::string& privateKey,
-                         std::shared_ptr<crypto::ICrypto> crypto)
+                         const std::shared_ptr<crypto::ICrypto>& crypto,
+                         bool invertFromTo)
     : SecretMessage(jData, crypto), payload{}
 {
     if (type != MessageType::TEXT_MESSAGE) throw std::runtime_error("Invalid message type");
 
-    crypto::Bytes sessionKey = createSessionKey(privateKey, from.publicKey, crypto);
+    std::string publicKey = invertFromTo ? to.publicKey : from.publicKey;
+    crypto::Bytes sessionKey = createSessionKey(privateKey, publicKey, crypto);
 
     crypto::Bytes cipher = crypto->stringToKey(jData["payload"]["message"].get<std::string>());
     crypto::Bytes plain = crypto->decrypt(cipher, sessionKey);
@@ -44,7 +48,7 @@ TextMessage::TextMessage(const json& jData,
 
 void TextMessage::serialize(json& jData,
                             const std::string& privateKey,
-                            std::shared_ptr<crypto::ICrypto> crypto) const
+                            const std::shared_ptr<crypto::ICrypto>& crypto) const
 {
     crypto::Bytes plain(payload.message.begin(), payload.message.end());
     crypto::Bytes sessionKey = createSessionKey(privateKey, to.publicKey, crypto);
@@ -60,12 +64,15 @@ void TextMessage::serialize(json& jData,
 
 const TextMessagePayload& TextMessage::getPayload() const { return payload; }
 
+void TextMessage::setBlockHash(const std::string& blockHash) { this->blockHash = blockHash; }
+
 TextMessageResponse::TextMessageResponse() : Message() {}
 
-TextMessageResponse::TextMessageResponse(const peer::UserPeer& from,
+TextMessageResponse::TextMessageResponse(const std::string& id,
+                                         const peer::UserPeer& from,
                                          const peer::UserPeer& to,
                                          uint64_t timestamp)
-    : Message(MessageType::TEXT_MESSAGE_RESPONSE, from, to, timestamp)
+    : Message(id, MessageType::TEXT_MESSAGE_RESPONSE, from, to, timestamp)
 {
 }
 

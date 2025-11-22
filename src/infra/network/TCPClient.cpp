@@ -3,6 +3,7 @@
 #include "DisconnectionMessage.hpp"
 #include "SocketServer.hpp"
 #include "timestamp.hpp"
+#include "uuid.hpp"
 
 namespace network
 {
@@ -10,12 +11,17 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
                      const std::shared_ptr<crypto::ICrypto>& crypto,
                      const std::shared_ptr<chat::ChatService>& chatService,
                      const std::shared_ptr<peer::PeerService>& peerService,
-                     const std::shared_ptr<ui::ConsoleUI>& consoleUI)
+                     const std::shared_ptr<blockchain::BlockchainService>& blockchainService,
+                     const std::shared_ptr<message::MessageService>& messageService,
+                     const std::shared_ptr<ui::ConsoleUI>& consoleUI,
+                     const std::string& lastHash)
     : client(),
       config(config),
       crypto(crypto),
       chatService(chatService),
       peerService(peerService),
+      blockchainService(blockchainService),
+      messageService(messageService),
       consoleUI(consoleUI)
 {
     std::vector<peer::UserHost> hosts = peerService->getHosts();
@@ -29,7 +35,7 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
         peer::UserPeer to{ userHost.host, userHost.port, "" };
         u_int64 timestamp = utils::getTimestamp();
 
-        message::ConnectionMessage message(from, to, timestamp);
+        message::ConnectionMessage message(utils::uuidv4(), from, to, timestamp, lastHash);
         sendMessage(message);
     }
 }
@@ -46,36 +52,81 @@ void TCPClient::connectToAllPeers()
     {
         u_int64 timestamp = utils::getTimestamp();
 
-        message::ConnectionMessage message(from, to, timestamp);
+        message::ConnectionMessage message(utils::uuidv4(), from, to, timestamp, "0");
         sendMessage(message);
     }
 }
 
-void TCPClient::sendMessage(const message::Message& message, bool withSecret)
+void TCPClient::sendMessage(const message::Message& message)
 {
+    if (typeid(message) == typeid(message::SecretMessage))
+    {
+        throw std::runtime_error("Secret messages should be sent by sendBlock() method");
+    };
+
     peer::UserPeer to = message.getTo();
     client.connectTo(to.host, to.port);
 
     json jMessage;
-    if (withSecret)
-    {
-        const message::TextMessage& sendMessage =
-            dynamic_cast<const message::TextMessage&>(message);
-        sendMessage.serialize(jMessage, config->get(config::ConfigField::PRIVATE_KEY), crypto);
-    }
-    else
-        message.serialize(jMessage);
+    message.serialize(jMessage);
 
     if (jMessage.size() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
 
     if (client.sendMessage(jMessage.dump()))
     {
         std::string response = client.receiveMessage();
-
         chatService->handleOutgoingMessage(response);
     }
 
     client.disconnect();
+}
+
+void TCPClient::sendSecretMessage(const message::SecretMessage& message)
+{
+    // send message (with text content)
+    peer::UserPeer to = message.getTo();
+    client.connectTo(to.host, to.port);
+
+    json jMessage;
+    message::TextMessage& textMessage =
+        const_cast<message::TextMessage&>(dynamic_cast<const message::TextMessage&>(message));
+
+    if (jMessage.size() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
+
+    // create block
+    blockchain::Block block;
+    blockchainService->createBlockFromMessage(textMessage, block);
+    textMessage.setBlockHash(block.hash);
+
+    textMessage.serialize(jMessage, config->get(config::ConfigField::PRIVATE_KEY), crypto);
+    std::string serializedMessage = jMessage.dump();
+
+    if (client.sendMessage(serializedMessage))
+    {
+        std::string response = client.receiveMessage();
+        chatService->handleOutgoingMessage(response);
+    }
+    client.disconnect();
+
+    // broadcast block (without text content)
+    std::vector<peer::UserPeer> peers = peerService->getPeers();
+
+    auto sendCallback = [this](const std::string& raw, const peer::UserPeer& peer) -> bool
+    {
+        client.connectTo(peer.host, peer.port);
+        bool ok = client.sendMessage(raw);
+        client.disconnect();
+        return ok;
+    };
+
+    bool stored = blockchainService->storeAndBroadcastBlock(block, peers, sendCallback);
+    if (stored)
+    {
+        messageService->insertSecretMessage(textMessage, serializedMessage, block.hash);
+        peerService->addChatPeer(textMessage.getTo());
+    }
+    else
+        consoleUI->printLog("[WARN] block was not stored (maybe duplicate)");
 }
 
 void TCPClient::disconnect()
@@ -89,7 +140,7 @@ void TCPClient::disconnect()
 
     for (const auto& peer : peers)
     {
-        message::DisconnectionMessage message(from, peer, utils::getTimestamp());
+        message::DisconnectionMessage message(utils::uuidv4(), from, peer, utils::getTimestamp());
         sendMessage(message);
     }
 }

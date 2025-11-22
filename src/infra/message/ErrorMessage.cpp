@@ -4,11 +4,12 @@ namespace message
 {
 ErrorMessageResponse::ErrorMessageResponse() : Message(), payload() {}
 
-ErrorMessageResponse::ErrorMessageResponse(const peer::UserPeer& from,
+ErrorMessageResponse::ErrorMessageResponse(const std::string& id,
+                                           const peer::UserPeer& from,
                                            const peer::UserPeer& to,
                                            uint64_t timestamp,
                                            const std::string& error)
-    : Message(MessageType::ERROR_RESPONSE, from, to, timestamp), payload{ error }
+    : Message(id, MessageType::ERROR_RESPONSE, from, to, timestamp), payload{ error }
 {
 }
 

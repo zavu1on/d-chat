@@ -3,13 +3,17 @@ add_library(
     STATIC
     network/TCPServer.cpp
     network/TCPClient.cpp
-    config/GlobalState.cpp
     config/JsonConfig.cpp
     message/ConnectionMessage.cpp
     message/TextMessage.cpp
     message/DisconnectionMessage.cpp
     message/ErrorMessage.cpp
     message/PeerListMessage.cpp
+    message/BlockRangeMessage.cpp
+    message/BlockchainErrorMessage.cpp
+    message/MessageDB.cpp
+    blockchain/ChainDB.cpp
+    peer/PeerDB.cpp
 )
 
 target_link_libraries(
@@ -26,6 +30,8 @@ target_include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/network
     ${CMAKE_CURRENT_SOURCE_DIR}/config
     ${CMAKE_CURRENT_SOURCE_DIR}/message
+    ${CMAKE_CURRENT_SOURCE_DIR}/blockchain
+    ${CMAKE_CURRENT_SOURCE_DIR}/peer
 )
 
 set(CONFIG_FILE "${CMAKE_SOURCE_DIR}/d-chat_config.json")

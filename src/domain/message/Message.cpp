@@ -7,30 +7,37 @@ namespace message
 json Message::getBasicSerialization() const
 {
     json jData;
+
+    jData["id"] = id;
     jData["type"] = Message::fromMessageTypeToString(type);
     jData["from"] = from.toJson();
     jData["to"] = to.toJson();
     jData["timestamp"] = timestamp;
+
     return jData;
 }
 
-Message::Message() : type(MessageType::NONE), from(), to(), timestamp(0) {}
+Message::Message() : id(""), type(MessageType::NONE), from(), to(), timestamp(0) {}
 
-Message::Message(MessageType type,
+Message::Message(const std::string& id,
+                 MessageType type,
                  const peer::UserPeer& from,
                  const peer::UserPeer& to,
                  uint64_t timestamp)
-    : type(type), from(from), to(to), timestamp(timestamp)
+    : id(id), type(type), from(from), to(to), timestamp(timestamp)
 {
 }
 
 Message::Message(const json& jData)
 {
+    id = jData["id"];
     from = peer::UserPeer(jData["from"]);
     to = peer::UserPeer(jData["to"]);
     timestamp = jData["timestamp"].get<uint64_t>();
     type = Message::fromStringToMessageType(jData["type"].get<std::string>());
 }
+
+const std::string& Message::getId() const { return id; }
 
 MessageType Message::getType() const { return type; }
 
@@ -48,6 +55,8 @@ std::string Message::fromMessageTypeToString(MessageType type)
             return "NONE";
         case MessageType::ERROR_RESPONSE:
             return "ERROR_RESPONSE";
+        case MessageType::BLOCKCHAIN_ERROR_RESPONSE:
+            return "BLOCKCHAIN_ERROR_RESPONSE";
         case MessageType::CONNECT:
             return "CONNECT";
         case MessageType::CONNECT_RESPONSE:
@@ -56,6 +65,10 @@ std::string Message::fromMessageTypeToString(MessageType type)
             return "PEER_LIST";
         case MessageType::PEER_LIST_RESPONSE:
             return "PEER_LIST_RESPONSE";
+        case MessageType::BLOCK_RANGE_REQUEST:
+            return "BLOCK_RANGE_REQUEST";
+        case MessageType::BLOCK_RANGE_RESPONSE:
+            return "BLOCK_RANGE_RESPONSE";
         case MessageType::TEXT_MESSAGE:
             return "TEXT_MESSAGE";
         case MessageType::TEXT_MESSAGE_RESPONSE:
@@ -73,10 +86,13 @@ MessageType Message::fromStringToMessageType(const std::string& type)
 {
     if (type == "NONE") return MessageType::NONE;
     if (type == "ERROR_RESPONSE") return MessageType::ERROR_RESPONSE;
+    if (type == "BLOCKCHAIN_ERROR_RESPONSE") return MessageType::BLOCKCHAIN_ERROR_RESPONSE;
     if (type == "CONNECT") return MessageType::CONNECT;
     if (type == "CONNECT_RESPONSE") return MessageType::CONNECT_RESPONSE;
     if (type == "PEER_LIST") return MessageType::PEER_LIST;
     if (type == "PEER_LIST_RESPONSE") return MessageType::PEER_LIST_RESPONSE;
+    if (type == "BLOCK_RANGE_REQUEST") return MessageType::BLOCK_RANGE_REQUEST;
+    if (type == "BLOCK_RANGE_RESPONSE") return MessageType::BLOCK_RANGE_RESPONSE;
     if (type == "TEXT_MESSAGE") return MessageType::TEXT_MESSAGE;
     if (type == "TEXT_MESSAGE_RESPONSE") return MessageType::TEXT_MESSAGE_RESPONSE;
     if (type == "DISCONNECT") return MessageType::DISCONNECT;
@@ -91,21 +107,33 @@ void SecretMessage::serialize(json&) const
         "This method is not accessible. SecretMessage requires session key for serialization");
 }
 
-SecretMessage::SecretMessage() : Message(), signature() {}
+json SecretMessage::getBasicSerialization() const
+{
+    json jData = Message::getBasicSerialization();
+    jData["blockHash"] = blockHash;
+    return jData;
+}
 
-SecretMessage::SecretMessage(MessageType type,
+SecretMessage::SecretMessage() : Message(), signature(), blockHash() {}
+
+SecretMessage::SecretMessage(const std::string& id,
+                             MessageType type,
                              const peer::UserPeer& from,
                              const peer::UserPeer& to,
                              uint64_t timestamp,
-                             const crypto::Bytes& signature)
-    : Message(type, from, to, timestamp), signature(signature)
+                             const crypto::Bytes& signature,
+                             const std::string& blockHash)
+    : Message(id, type, from, to, timestamp), signature(signature), blockHash(blockHash)
 {
 }
 
-SecretMessage::SecretMessage(const json& jData, std::shared_ptr<crypto::ICrypto> crypto)
+SecretMessage::SecretMessage(const json& jData, const std::shared_ptr<crypto::ICrypto>& crypto)
     : Message(jData)
 {
     signature = crypto->stringToKey(jData["signature"].get<std::string>());
+    blockHash = jData["blockHash"].get<std::string>();
 }
 const crypto::Bytes& SecretMessage::getSignature() const { return signature; }
+
+const std::string& SecretMessage::getBlockHash() const { return blockHash; }
 }  // namespace message

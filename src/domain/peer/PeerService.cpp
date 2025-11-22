@@ -6,7 +6,9 @@
 
 namespace peer
 {
-PeerService::PeerService(std::vector<std::string>& hosts)
+PeerService::PeerService(std::vector<std::string>& hosts,
+                         const std::shared_ptr<IPeerRepo>& peerRepo)
+    : peerRepo(peerRepo)
 {
     for (const std::string& trustedPeer : hosts)
     {
@@ -38,7 +40,7 @@ int PeerService::getPeersCount() const
 UserPeer PeerService::getPeer(size_t index) const
 {
     std::shared_lock lock(mutex);
-    return peers[index];
+    return peers.at(index);
 }
 
 UserPeer PeerService::findPeer(const UserHost& host) const
@@ -67,5 +69,14 @@ void PeerService::removePeer(const UserPeer& peer)
     std::unique_lock lock(mutex);
     auto it = std::find(peers.begin(), peers.end(), peer);
     if (it != peers.end()) peers.erase(it);
+}
+
+void PeerService::getAllChatPeers(std::vector<UserPeer>& peers) { peerRepo->getAllPeers(peers); }
+
+void PeerService::addChatPeer(const UserPeer& peer) { peerRepo->addPeer(peer); }
+
+bool PeerService::findPublicKeyByUserHost(const UserHost& host, std::string& publicKey)
+{
+    return peerRepo->findPublicKeyByUserHost(host, publicKey);
 }
 }  // namespace peer

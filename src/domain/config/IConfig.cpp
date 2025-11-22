@@ -16,8 +16,6 @@ std::string IConfig::configFieldToString(ConfigField key)
             return "public_key";
         case ConfigField::PRIVATE_KEY:
             return "private_key";
-        case ConfigField::NAME:
-            return "name";
     }
 
     throw std::runtime_error("Unknown config field");
@@ -33,8 +31,6 @@ ConfigField IConfig::stringToConfigField(const std::string& key)
         return ConfigField::PUBLIC_KEY;
     else if (key == "private_key")
         return ConfigField::PRIVATE_KEY;
-    else if (key == "name")
-        return ConfigField::NAME;
 
     throw std::runtime_error("Unknown config field");
 }

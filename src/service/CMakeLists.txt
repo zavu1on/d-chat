@@ -6,20 +6,18 @@ add_library(
     json/JsonFile.hpp
     crypto/XORCrypto.cpp
     crypto/OpenSSLCrypto.cpp
-    blockchain/Block.cpp
-    blockchain/Blockchain.cpp
+    db/DBFile.cpp
 )
 
-
-# set(nlohmann_json_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-mingw-static/share/nlohmann_json")
-# set(OPENSSL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-mingw-static/share/openssl")
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenSSL CONFIG REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 target_link_libraries(
     d-chat_service
     PUBLIC
     nlohmann_json::nlohmann_json
+    SQLite::SQLite3
 )
 
 target_link_libraries(
@@ -37,5 +35,14 @@ target_include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/network
     ${CMAKE_CURRENT_SOURCE_DIR}/json
     ${CMAKE_CURRENT_SOURCE_DIR}/crypto
-    ${CMAKE_CURRENT_SOURCE_DIR}/blockchain
+    ${CMAKE_CURRENT_SOURCE_DIR}/db
+)
+
+set(DB_FILE "${CMAKE_SOURCE_DIR}/d-chat.db")
+
+add_custom_command(
+    TARGET d-chat_service POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${DB_FILE}"
+        "${CMAKE_BINARY_DIR}/d-chat.db"
 )

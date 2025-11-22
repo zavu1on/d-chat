@@ -42,8 +42,8 @@ KeyPair XORCrypto::generateKeyPair()
     return kp;
 }
 
-std::string XORCrypto::keyToString(const Bytes& k) { return utils::to_hex(k); }
-Bytes XORCrypto::stringToKey(const std::string& s) { return utils::from_hex(s); }
+std::string XORCrypto::keyToString(const Bytes& k) { return utils::toHex(k); }
+Bytes XORCrypto::stringToKey(const std::string& s) { return utils::fromHex(s); }
 
 Bytes XORCrypto::createSessionKey(const Bytes& privateKey, const Bytes& peerPublicKey)
 {

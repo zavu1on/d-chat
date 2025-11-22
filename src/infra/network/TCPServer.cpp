@@ -2,8 +2,14 @@
 
 namespace network
 {
-TCPServer::TCPServer(u_short port, const std::shared_ptr<chat::ChatService>& chatService)
-    : server(port), chatService(chatService)
+TCPServer::TCPServer(u_short port,
+                     const std::shared_ptr<chat::ChatService>& chatService,
+                     const std::shared_ptr<blockchain::BlockchainService>& blockchainService,
+                     const std::shared_ptr<ui::ConsoleUI>& consoleUI)
+    : server(port),
+      chatService(chatService),
+      blockchainService(blockchainService),
+      consoleUI(consoleUI)
 {
 }
 
@@ -16,10 +22,27 @@ void TCPServer::start()
         {
             std::string message(buffer, bufferSize);
 
-            std::string response;
-            chatService->handleIncomingMessage(message, response);
+            try
+            {
+                json jData = json::parse(message);
+                std::string response = "{}";
 
-            sendCallback(response);
+                if (jData.contains("previousHash") && jData.contains("payloadHash"))
+                {
+                    blockchainService->onIncomingBlock(jData, response);
+                }
+                else
+                {
+                    chatService->handleIncomingMessage(jData, response);
+                }
+
+                sendCallback(response);
+            }
+            catch (std::exception& error)
+            {
+                consoleUI->printLog(
+                    "[SERVER] handle incoming message error: " + std::string(error.what()) + "\n");
+            }
         });
     if (!started) throw std::runtime_error("Failed to start server");
 }

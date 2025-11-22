@@ -4,10 +4,11 @@ namespace message
 {
 DisconnectionMessage::DisconnectionMessage() : Message() {}
 
-DisconnectionMessage::DisconnectionMessage(const peer::UserPeer& from,
+DisconnectionMessage::DisconnectionMessage(const std::string& id,
+                                           const peer::UserPeer& from,
                                            const peer::UserPeer& to,
                                            uint64_t timestamp)
-    : Message(MessageType::DISCONNECT, from, to, timestamp)
+    : Message(id, MessageType::DISCONNECT, from, to, timestamp)
 {
 }
 
@@ -20,10 +21,11 @@ void DisconnectionMessage::serialize(json& jData) const { jData = getBasicSerial
 
 DisconnectionMessageResponse::DisconnectionMessageResponse() : Message() {}
 
-DisconnectionMessageResponse::DisconnectionMessageResponse(const peer::UserPeer& from,
+DisconnectionMessageResponse::DisconnectionMessageResponse(const std::string& id,
+                                                           const peer::UserPeer& from,
                                                            const peer::UserPeer& to,
                                                            uint64_t timestamp)
-    : Message(MessageType::DISCONNECT_RESPONSE, from, to, timestamp)
+    : Message(id, MessageType::DISCONNECT_RESPONSE, from, to, timestamp)
 {
 }
 

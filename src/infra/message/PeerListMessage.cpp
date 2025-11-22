@@ -4,12 +4,13 @@ namespace message
 {
 PeerListMessage::PeerListMessage() : Message(), payload{} {}
 
-PeerListMessage::PeerListMessage(const peer::UserPeer& from,
+PeerListMessage::PeerListMessage(const std::string& id,
+                                 const peer::UserPeer& from,
                                  const peer::UserPeer& to,
                                  uint64_t timestamp,
                                  u_int start,
-                                 u_int end)
-    : Message(MessageType::PEER_LIST, from, to, timestamp), payload{ start, end }
+                                 u_int count)
+    : Message(id, MessageType::PEER_LIST, from, to, timestamp), payload{ start, count }
 {
 }
 
@@ -18,7 +19,7 @@ PeerListMessage::PeerListMessage(const json& jData) : Message(jData)
     if (type != MessageType::PEER_LIST) throw std::runtime_error("Invalid message type");
 
     payload.start = jData["payload"]["start"].get<u_int>();
-    payload.end = jData["payload"]["end"].get<u_int>();
+    payload.count = jData["payload"]["count"].get<u_int>();
 }
 
 void PeerListMessage::serialize(json& jData) const
@@ -26,18 +27,19 @@ void PeerListMessage::serialize(json& jData) const
     jData = getBasicSerialization();
 
     jData["payload"]["start"] = payload.start;
-    jData["payload"]["end"] = payload.end;
+    jData["payload"]["count"] = payload.count;
 }
 
 const PeerListMessagePayload& PeerListMessage::getPayload() const { return payload; }
 
 PeerListMessageResponse::PeerListMessageResponse() : Message() {}
 
-PeerListMessageResponse::PeerListMessageResponse(const peer::UserPeer& from,
+PeerListMessageResponse::PeerListMessageResponse(const std::string& id,
+                                                 const peer::UserPeer& from,
                                                  const peer::UserPeer& to,
                                                  uint64_t timestamp,
                                                  const std::vector<peer ::UserPeer> peers)
-    : Message(MessageType::PEER_LIST_RESPONSE, from, to, timestamp), payload{ peers }
+    : Message(id, MessageType::PEER_LIST_RESPONSE, from, to, timestamp), payload{ peers }
 {
 }
 

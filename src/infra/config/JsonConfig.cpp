@@ -8,7 +8,7 @@
 namespace config
 {
 
-JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<crypto::ICrypto> crypto)
+JsonConfig::JsonConfig(const std::string& path, const std::shared_ptr<crypto::ICrypto>& crypto)
     : jsonFile(path), crypto(crypto)
 {
     json::json jData;
@@ -35,19 +35,6 @@ JsonConfig::JsonConfig(const std::string& path, std::shared_ptr<crypto::ICrypto>
 }
 
 std::string JsonConfig::get(ConfigField key) const { return data.at(key); }
-
-void JsonConfig::update(ConfigField key, const std::string& value)
-{
-    data[key] = value;
-
-    std::map<std::string, std::string> writeData;
-    for (const auto& [k, v] : data)
-    {
-        writeData[IConfig::configFieldToString(k)] = v;
-    }
-
-    jsonFile.write(writeData);
-}
 
 void JsonConfig::loadTrustedPeerList(std::vector<std::string>& trustedPeers)
 {
@@ -88,7 +75,6 @@ void JsonConfig::generatedDefaultConfig()
     jData["port"] = std::to_string(network::SocketClient::findFreePort());
     jData["public_key"] = crypto->keyToString(keyPair.publicKey);
     jData["private_key"] = crypto->keyToString(keyPair.privateKey);
-    jData["name"] = jData["host"];
     jData["trustedPeerList"] = json::json::array();
 
     jsonFile.writeJson(jData);

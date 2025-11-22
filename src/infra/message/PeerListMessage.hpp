@@ -9,7 +9,7 @@ using u_int = unsigned int;
 struct PeerListMessagePayload
 {
     u_int start;
-    u_int end;
+    u_int count;
 };
 
 class PeerListMessage : public Message
@@ -19,11 +19,12 @@ protected:
 
 public:
     PeerListMessage();
-    PeerListMessage(const peer::UserPeer& from,
+    PeerListMessage(const std::string& id,
+                    const peer::UserPeer& from,
                     const peer::UserPeer& to,
                     uint64_t timestamp,
                     u_int start,
-                    u_int end);
+                    u_int count);
     PeerListMessage(const json& jData);
 
     void serialize(json& jData) const override;
@@ -42,7 +43,8 @@ protected:
 
 public:
     PeerListMessageResponse();
-    PeerListMessageResponse(const peer ::UserPeer& from,
+    PeerListMessageResponse(const std::string& id,
+                            const peer ::UserPeer& from,
                             const peer ::UserPeer& to,
                             uint64_t timestamp,
                             const std::vector<peer ::UserPeer> peers);

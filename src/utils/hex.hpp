@@ -7,7 +7,7 @@
 namespace utils
 {
 
-inline std::string to_hex(const std::vector<uint8_t>& data)
+inline std::string toHex(const std::vector<uint8_t>& data)
 {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
@@ -15,7 +15,7 @@ inline std::string to_hex(const std::vector<uint8_t>& data)
     return oss.str();
 }
 
-inline std::vector<uint8_t> from_hex(const std::string& hex)
+inline std::vector<uint8_t> fromHex(const std::string& hex)
 {
     std::vector<uint8_t> out;
     out.reserve(hex.size() / 2);

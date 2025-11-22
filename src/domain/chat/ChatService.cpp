@@ -1,7 +1,9 @@
 #include "ChatService.hpp"
 
+#include "Block.hpp"
 #include "GlobalState.hpp"
 #include "timestamp.hpp"
+#include "uuid.hpp"
 
 namespace chat
 {
@@ -21,23 +23,41 @@ void ChatService::handleIncomingErrorMessage(const json& jData,
         peer::UserPeer to(jData["from"]);
         uint64_t timestamp = utils::getTimestamp();
 
-        message::ErrorMessageResponse errorMessage(me, to, timestamp, error);
+        message::ErrorMessageResponse errorMessage(utils::uuidv4(), me, to, timestamp, error);
         json jData;
         errorMessage.serialize(jData);
 
         response = jData.dump();
     }
     else
-        response = "";
+        response = "{}";
+}
+
+void ChatService::handleOutgoingBlockchainErrorMessage(
+    const message::BlockchainErrorMessageResponse& response)
+{
+    peer::UserPeer from = response.getFrom();
+    const message::BlockchainErrorMessageResponsePayload& payload = response.getPayload();
+
+    consoleUI->printLog("[CLIENT] Blockchain error response from:  " + from.host + ":" +
+                        std::to_string(from.port) + " " + payload.error + "\n");
+
+    if (messageService->removeMessageByBlockHash(payload.block.hash))
+    {
+        consoleUI->printLog(
+            "[CLIENT] can not save message without successfully delivered blocks, removed message "
+            "for block " +
+            payload.block.hash + "\n");
+    }
 }
 
 void ChatService::handleOutgoingErrorMessage(const message::ErrorMessageResponse& response)
 {
     peer::UserPeer from = response.getFrom();
-    message::ErrorMessageResponsePayload payload = response.getPayload();
+    const message::ErrorMessageResponsePayload& payload = response.getPayload();
 
-    consoleUI->printLog("[CLIENT] Error response from:  " + from.host + ":" +
-                        std::to_string(from.port) + " " + payload.error);
+    consoleUI->printLog("[CLIENT] Error response from: " + from.host + ":" +
+                        std::to_string(from.port) + " " + payload.error + "\n");
 }
 
 void ChatService::handleIncomingConnectionMessage(const message::ConnectionMessage& message,
@@ -45,6 +65,7 @@ void ChatService::handleIncomingConnectionMessage(const message::ConnectionMessa
 {
     peer::UserPeer from = message.getFrom();
     peer::UserPeer to = message.getTo();
+    const message::ConnectionMessagePayload& payload = message.getPayload();
 
     peerService->addPeer({ from.host, from.port, from.publicKey });
 
@@ -52,7 +73,10 @@ void ChatService::handleIncomingConnectionMessage(const message::ConnectionMessa
     uint64_t timestamp = utils::getTimestamp();
 
     unsigned int peersToReceive = peerService->getPeersCount();
-    message::ConnectionMessageResponse responseMessage(me, from, timestamp, peersToReceive);
+    unsigned int missingCount = blockchainService->countBlocksAfterHash(payload.lastBlockHash);
+
+    message::ConnectionMessageResponse responseMessage(
+        utils::uuidv4(), me, from, timestamp, peersToReceive, missingCount);
 
     json jData;
     responseMessage.serialize(jData);
@@ -68,16 +92,23 @@ void ChatService::handleOutgoingConnectionMessage(
     peer::UserPeer from = response.getFrom();
     peerService->addPeer({ from.host, from.port, from.publicKey });
 
-    message::ConnectionMessageResponsePayload payload = response.getPayload();
+    const message::ConnectionMessageResponsePayload& payload = response.getPayload();
     config::GlobalState& globalState = config::GlobalState::getInstance();
+
     globalState.setPeersToReceive(payload.peersToReceive);
+    globalState.setMissingBlocksCount(payload.missingBlocksCount);
 }
 
-void ChatService::handleIncomingMessage(const message::TextMessage& message, std::string& response)
+void ChatService::handleIncomingTextMessage(const message::TextMessage& message,
+                                            const std::string& messageDump,
+                                            std::string& response)
 {
     peer::UserPeer from = message.getFrom();
     peer::UserPeer to = message.getTo();
-    message::TextMessagePayload payload = message.getPayload();
+    const message::TextMessagePayload& payload = message.getPayload();
+
+    messageService->insertSecretMessage(message, messageDump, message.getBlockHash());
+    peerService->addChatPeer(from);
 
     consoleUI->printLog("[SERVER] received message from " + from.host + ":" +
                         std::to_string(from.port) + ": " + payload.message + "\n");
@@ -85,7 +116,7 @@ void ChatService::handleIncomingMessage(const message::TextMessage& message, std
     peer::UserPeer me{ to.host, to.port, config->get(config::ConfigField::PUBLIC_KEY) };
     uint64_t timestamp = utils::getTimestamp();
 
-    message::TextMessageResponse responseMessage(me, from, timestamp);
+    message::TextMessageResponse responseMessage(utils::uuidv4(), me, from, timestamp);
 
     json jData;
     responseMessage.serialize(jData);
@@ -93,17 +124,17 @@ void ChatService::handleIncomingMessage(const message::TextMessage& message, std
     response = jData.dump();
 }
 
-void ChatService::handleOutgoingMessage(const message::TextMessageResponse&) {}
+void ChatService::handleOutgoingTextMessage(const message::TextMessageResponse&) {}
 
 void ChatService::handleIncomingPeerListMessage(const message::PeerListMessage& message,
                                                 std::string& response)
 {
     peer::UserPeer from = message.getFrom();
     peer::UserPeer to = message.getTo();
-    message::PeerListMessagePayload payload = message.getPayload();
+    const message::PeerListMessagePayload& payload = message.getPayload();
     std::vector<peer::UserPeer> peers;
 
-    for (size_t i = payload.start; i < payload.end; i++)
+    for (size_t i = payload.start; i < payload.start + payload.count; i++)
     {
         try
         {
@@ -112,13 +143,14 @@ void ChatService::handleIncomingPeerListMessage(const message::PeerListMessage& 
 
             peers.push_back(peer);
         }
-        catch (const std::range_error&)
+        catch (const std::out_of_range&)
         {
             break;
         }
     }
 
-    message::PeerListMessageResponse responseMessage(to, from, utils::getTimestamp(), peers);
+    message::PeerListMessageResponse responseMessage(
+        utils::uuidv4(), to, from, utils::getTimestamp(), peers);
 
     json jData;
     responseMessage.serialize(jData);
@@ -127,7 +159,7 @@ void ChatService::handleIncomingPeerListMessage(const message::PeerListMessage& 
 
 void ChatService::handleOutgoingPeerListMessage(const message::PeerListMessageResponse& response)
 {
-    message::PeerListMessageResponsePayload payload = response.getPayload();
+    const message::PeerListMessageResponsePayload& payload = response.getPayload();
 
     for (const auto& peer : payload.peers)
     {
@@ -146,7 +178,7 @@ void ChatService::handleIncomingDisconnectionMessage(const message::Disconnectio
     peerService->removePeer(from);
 
     uint64_t timestamp = utils::getTimestamp();
-    message::DisconnectionMessageResponse responseMessage(to, from, timestamp);
+    message::DisconnectionMessageResponse responseMessage(utils::uuidv4(), to, from, timestamp);
 
     json jData;
     responseMessage.serialize(jData);
@@ -156,6 +188,35 @@ void ChatService::handleIncomingDisconnectionMessage(const message::Disconnectio
                         "\n");
 }
 
+void ChatService::handleIncomingBlockRangeMessage(const message::BlockRangeMessage& message,
+                                                  std::string& response)
+{
+    const message::BlockRangeMessagePayload& payload = message.getPayload();
+    peer::UserPeer from = message.getFrom();
+    peer::UserPeer to = message.getTo();
+
+    std::vector<blockchain::Block> blocks;
+    blockchainService->getBlocksByIndexRange(
+        payload.start, payload.count, payload.lastHash, blocks);
+
+    message::BlockRangeMessageResponse responseMessage(
+        utils::uuidv4(), to, from, utils::getTimestamp(), blocks);
+    json jData;
+    responseMessage.serialize(jData);
+    response = jData.dump();
+}
+
+void ChatService::handleOutgoingBlockRangeMessage(
+    const message::BlockRangeMessageResponse& response)
+{
+    const message::BlockRangeMessageResponsePayload& payload = response.getPayload();
+
+    blockchainService->addNewBlockRange(payload.blocks);
+    consoleUI->printLog("[CLIENT] received " + std::to_string(payload.blocks.size()) +
+                        " blocks from " + response.getFrom().host + ":" +
+                        std::to_string(response.getFrom().port) + "\n");
+}
+
 void ChatService::handleOutgoingDisconnectionMessage(const message::DisconnectionMessageResponse&)
 {
 }
@@ -163,55 +224,59 @@ void ChatService::handleOutgoingDisconnectionMessage(const message::Disconnectio
 ChatService::ChatService(const std::shared_ptr<config::IConfig>& config,
                          const std::shared_ptr<crypto::ICrypto>& crypto,
                          const std::shared_ptr<peer::PeerService>& peerService,
+                         const std::shared_ptr<blockchain::BlockchainService>& blockchainService,
+                         const std::shared_ptr<message::MessageService>& messageService,
                          const std::shared_ptr<ui::ConsoleUI>& consoleUI)
-    : config(config), crypto(crypto), peerService(peerService), consoleUI(consoleUI)
+    : config(config),
+      crypto(crypto),
+      peerService(peerService),
+      blockchainService(blockchainService),
+      messageService(messageService),
+      consoleUI(consoleUI)
 {
 }
 
-void ChatService::handleIncomingMessage(const std::string& message, std::string& response)
+void ChatService::handleIncomingMessage(const json& jMessage, std::string& response)
 {
     try
     {
-        json jData = json::parse(message);
-
-        if (jData["type"] ==
+        if (jMessage["type"] ==
             message::Message::fromMessageTypeToString(message::MessageType::CONNECT))
         {
-            message::ConnectionMessage message(jData);
+            message::ConnectionMessage message(jMessage);
             handleIncomingConnectionMessage(message, response);
         }
-        else if (jData["type"] ==
+        else if (jMessage["type"] ==
                  message::Message::fromMessageTypeToString(message::MessageType::TEXT_MESSAGE))
         {
             message::TextMessage message(
-                jData, config->get(config::ConfigField::PRIVATE_KEY), crypto);
-            handleIncomingMessage(message, response);
+                jMessage, config->get(config::ConfigField::PRIVATE_KEY), crypto);
+            handleIncomingTextMessage(message, jMessage.dump(), response);
         }
-        else if (jData["type"] ==
+        else if (jMessage["type"] ==
                  message::Message::fromMessageTypeToString(message::MessageType::PEER_LIST))
         {
-            message::PeerListMessage message(jData);
+            message::PeerListMessage message(jMessage);
             handleIncomingPeerListMessage(message, response);
         }
-        else if (jData["type"] ==
+        else if (jMessage["type"] == message::Message::fromMessageTypeToString(
+                                         message::MessageType::BLOCK_RANGE_REQUEST))
+        {
+            message::BlockRangeMessage message(jMessage);
+            handleIncomingBlockRangeMessage(message, response);
+        }
+        else if (jMessage["type"] ==
                  message::Message::fromMessageTypeToString(message::MessageType::DISCONNECT))
         {
-            message::DisconnectionMessage message(jData);
+            message::DisconnectionMessage message(jMessage);
             handleIncomingDisconnectionMessage(message, response);
         }
+        else
+            response = "{}";
     }
     catch (std::exception& error)
     {
-        try
-        {
-            json jData = json::parse(message);
-            handleIncomingErrorMessage(jData, std::string(error.what()), response);
-        }
-        catch (const std::exception& unhandledError)
-        {
-            consoleUI->printLog("[SERVER] handle incoming message error: " +
-                                std::string(unhandledError.what()));
-        }
+        handleIncomingErrorMessage(jMessage, std::string(error.what()), response);
     }
 }
 
@@ -227,6 +292,12 @@ void ChatService::handleOutgoingMessage(const std::string& response)
             message::ErrorMessageResponse response(jData);
             handleOutgoingErrorMessage(response);
         }
+        if (jData["type"] == message::Message::fromMessageTypeToString(
+                                 message::MessageType::BLOCKCHAIN_ERROR_RESPONSE))
+        {
+            message::BlockchainErrorMessageResponse response(jData);
+            handleOutgoingBlockchainErrorMessage(response);
+        }
         if (jData["type"] ==
             message::Message::fromMessageTypeToString(message::MessageType::CONNECT_RESPONSE))
         {
@@ -237,7 +308,7 @@ void ChatService::handleOutgoingMessage(const std::string& response)
                                       message::MessageType::TEXT_MESSAGE_RESPONSE))
         {
             message::TextMessageResponse response(jData);
-            handleOutgoingMessage(response);
+            handleOutgoingTextMessage(response);
         }
         else if (jData["type"] == message::Message::fromMessageTypeToString(
                                       message::MessageType::PEER_LIST_RESPONSE))
@@ -245,7 +316,12 @@ void ChatService::handleOutgoingMessage(const std::string& response)
             message::PeerListMessageResponse response(jData);
             handleOutgoingPeerListMessage(response);
         }
-
+        else if (jData["type"] == message::Message::fromMessageTypeToString(
+                                      message::MessageType::BLOCK_RANGE_RESPONSE))
+        {
+            message::BlockRangeMessageResponse response(jData);
+            handleOutgoingBlockRangeMessage(response);
+        }
         else if (jData["type"] == message::Message::fromMessageTypeToString(
                                       message::MessageType::DISCONNECT_RESPONSE))
         {
@@ -255,7 +331,8 @@ void ChatService::handleOutgoingMessage(const std::string& response)
     }
     catch (std::exception& error)
     {
-        consoleUI->printLog("[CLIENT] handle outgoing message error: " + std::string(error.what()));
+        consoleUI->printLog("[CLIENT] handle outgoing message error: " + std::string(error.what()) +
+                            "\n");
     }
 }
 }  // namespace chat

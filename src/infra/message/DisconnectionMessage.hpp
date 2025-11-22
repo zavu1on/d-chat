@@ -12,7 +12,10 @@ class DisconnectionMessage : public Message
 {
 public:
     DisconnectionMessage();
-    DisconnectionMessage(const peer::UserPeer& from, const peer::UserPeer& to, uint64_t timestamp);
+    DisconnectionMessage(const std::string& id,
+                         const peer::UserPeer& from,
+                         const peer::UserPeer& to,
+                         uint64_t timestamp);
     DisconnectionMessage(const json& jData);
 
     void serialize(json& jData) const override;
@@ -22,7 +25,8 @@ class DisconnectionMessageResponse : public Message
 {
 public:
     DisconnectionMessageResponse();
-    DisconnectionMessageResponse(const peer::UserPeer& from,
+    DisconnectionMessageResponse(const std::string& id,
+                                 const peer::UserPeer& from,
                                  const peer::UserPeer& to,
                                  uint64_t timestamp);
     DisconnectionMessageResponse(const json& jData);

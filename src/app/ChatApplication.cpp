@@ -1,12 +1,273 @@
 #include "ChatApplication.hpp"
 
+#include <unordered_set>
+
 #include "GlobalState.hpp"
 #include "TextMessage.hpp"
 #include "timestamp.hpp"
+#include "uuid.hpp"
 
 namespace app
 {
-const u_int PEERS_BATCH_SIZE = 4;
+const u_int PEERS_BATCH_SIZE = 12;
+const u_int BLOCKS_BATCH_SIZE = 4;
+const char* DB_PATH = "d-chat.db";
+
+void ChatApplication::handlePeersCommand()
+{
+    std::vector<peer::UserPeer> peers = peerService->getPeers();
+
+    if (peers.empty())
+    {
+        consoleUI->printLog("[INFO] No connected peers");
+        return;
+    }
+
+    std::string output = "[PEERS LIST]\n";
+    output += "Total peers: " + std::to_string(peers.size()) + "\n";
+
+    for (size_t i = 0; i < peers.size(); ++i)
+    {
+        output += std::to_string(i + 1) + ". " + peers[i].host + ":" +
+                  std::to_string(peers[i].port) + "\n";
+        output += "   Public Key: " + peers[i].publicKey.substr(0, 8) + "...\n";
+    }
+
+    consoleUI->printLog(output);
+}
+
+void ChatApplication::handleChatsCommand()
+{
+    std::vector<peer::UserPeer> chatPeers;
+    peerService->getAllChatPeers(chatPeers);
+
+    if (chatPeers.empty())
+    {
+        consoleUI->printLog("[INFO] No chat peers found\n");
+        return;
+    }
+
+    std::string output = "[CHAT PEERS LIST]\n";
+    output += "Total chats: " + std::to_string(chatPeers.size()) + "\n";
+
+    for (size_t i = 0; i < chatPeers.size(); ++i)
+    {
+        output += std::to_string(i + 1) + ". " + chatPeers[i].host + ":" +
+                  std::to_string(chatPeers[i].port) + "\n";
+        output += "   Public Key: " + chatPeers[i].publicKey.substr(0, 8) + "...\n";
+    }
+
+    consoleUI->printLog(output);
+}
+
+void ChatApplication::handleSendCommand(const std::string& args)
+{
+    try
+    {
+        std::string command = args;
+        size_t start = command.find_first_not_of(" \t");
+        if (start == std::string::npos)
+        {
+            consoleUI->printLog(
+                "[ERROR] Invalid command format. Usage: /send <host:port> <message> or /send all "
+                "<message>\n");
+            return;
+        }
+        command = command.substr(start);
+
+        if (command.substr(0, 3) == "all")
+        {
+            size_t spaceAfterAll = command.find(' ', 3);
+            if (spaceAfterAll == std::string::npos)
+            {
+                consoleUI->printLog("[ERROR] Invalid command format. Usage: /send all <message>\n");
+                return;
+            }
+
+            std::string message = command.substr(spaceAfterAll + 1);
+            if (message.empty())
+            {
+                consoleUI->printLog("[ERROR] Message cannot be empty\n");
+                return;
+            }
+
+            std::vector<peer::UserPeer> peers = peerService->getPeers();
+            if (peers.empty())
+            {
+                consoleUI->printLog("[INFO] No online peers to send message to\n");
+                return;
+            }
+
+            uint64_t timestamp = utils::getTimestamp();
+            std::string errors;
+
+            for (const auto& peer : peers)
+            {
+                try
+                {
+                    message::TextMessage sendMessage(
+                        utils::uuidv4(), from, peer, timestamp, message, "0");
+                    client->sendSecretMessage(sendMessage);
+                }
+                catch (const std::exception& error)
+                {
+                    errors += "\n  to " + peer.host + ":" + std::to_string(peer.port) + " - " +
+                              error.what();
+                }
+            }
+        }
+        else
+        {
+            size_t spacePos = command.find(' ');
+            if (spacePos == std::string::npos)
+            {
+                consoleUI->printLog(
+                    "[ERROR] Invalid command format. Usage: /send <host:port> <message> or /send "
+                    "all <message>\n");
+                return;
+            }
+
+            std::string hostPort = command.substr(0, spacePos);
+            std::string message = command.substr(spacePos + 1);
+
+            size_t colonPos = hostPort.find(':');
+            if (colonPos == std::string::npos)
+            {
+                consoleUI->printLog(
+                    "[ERROR] Invalid host:port format. Usage: /send <host:port> <message> or /send "
+                    "all <message>\n");
+                return;
+            }
+
+            std::string host = hostPort.substr(0, colonPos);
+            std::string portStr = hostPort.substr(colonPos + 1);
+
+            if (portStr.empty() || !std::all_of(portStr.begin(), portStr.end(), ::isdigit))
+            {
+                consoleUI->printLog(
+                    "[ERROR] Port must be a number. Usage: /send <host:port> <message> or /send "
+                    "all <message>\n");
+                return;
+            }
+
+            int port = std::stoi(portStr);
+
+            peer::UserPeer to = peerService->findPeer(peer::UserHost(host, port));
+            uint64_t timestamp = utils::getTimestamp();
+
+            message::TextMessage sendMessage(utils::uuidv4(), from, to, timestamp, message, "0");
+            client->sendSecretMessage(sendMessage);
+            consoleUI->printLog("[INFO] Message sent to " + host + ":" + std::to_string(port) +
+                                "\n");
+        }
+    }
+    catch (std::exception& error)
+    {
+        consoleUI->printLog("[ERROR] " + std::string(error.what()) + "\n");
+    }
+}
+
+void ChatApplication::handleChatCommand(const std::string& args)
+{
+    std::string hostPort = args;
+
+    hostPort.erase(0, hostPort.find_first_not_of(" \t"));
+    hostPort.erase(hostPort.find_last_not_of(" \t") + 1);
+
+    if (hostPort.empty())
+    {
+        consoleUI->printLog("[ERROR] Please specify a peer host:port. Usage: /chat <host:port>\n");
+        return;
+    }
+
+    try
+    {
+        size_t colonPos = hostPort.find(':');
+        if (colonPos == std::string::npos)
+        {
+            consoleUI->printLog("[ERROR] Invalid host:port format. Usage: /chat <host:port>\n");
+            return;
+        }
+
+        std::string host = hostPort.substr(0, colonPos);
+        std::string portStr = hostPort.substr(colonPos + 1);
+
+        if (portStr.empty() || !std::all_of(portStr.begin(), portStr.end(), ::isdigit))
+        {
+            consoleUI->printLog("[ERROR] Port must be a number. Usage: /chat <host:port>\n");
+            return;
+        }
+
+        unsigned short port = static_cast<unsigned short>(std::stoi(portStr));
+        peer::UserHost userHost(host, port);
+
+        std::string peerPublicKey;
+        if (!peerService->findPublicKeyByUserHost(userHost, peerPublicKey))
+        {
+            consoleUI->printLog("[ERROR] No peer found with address " + host + ":" +
+                                std::to_string(port) + ". Try /chats to see available chats.\n");
+            return;
+        }
+
+        std::string myPublicKey = config->get(config::ConfigField::PUBLIC_KEY);
+
+        std::vector<message::TextMessage> messages;
+        messageService->findChatMessages(myPublicKey, peerPublicKey, messages);
+
+        if (messages.empty())
+        {
+            consoleUI->printLog("[INFO] No messages found with peer at " + host + ":" +
+                                std::to_string(port) + "\n");
+            return;
+        }
+
+        std::vector<std::string> invalidIds;
+        messageService->findInvalidChatMessageIDs(messages, invalidIds);
+        std::unordered_set<std::string> invalidSet(invalidIds.begin(), invalidIds.end());
+
+        std::string output = "[CHAT HISTORY with " + host + ":" + std::to_string(port) + "]\n";
+        output += "Total messages: " + std::to_string(messages.size());
+        if (!invalidIds.empty())
+        {
+            output += " (" + std::to_string(invalidIds.size()) + " invalid)";
+        }
+        output += "\n";
+
+        for (const auto& msg : messages)
+        {
+            std::string sender = (msg.getFrom().publicKey == myPublicKey) ? "YOU" : "PEER";
+            std::string timestamp = std::to_string(msg.getTimestamp());
+            std::string status = invalidSet.count(msg.getId()) ? " [INVALID]" : "";
+            output += "[" + timestamp.substr(timestamp.size() - 6) + "] " + sender + ": " +
+                      msg.getPayload().message + status + "\n";
+        }
+
+        consoleUI->printLog(output);
+    }
+    catch (const std::exception& e)
+    {
+        consoleUI->printLog("[ERROR] Failed to retrieve chat history: " + std::string(e.what()) +
+                            "\n");
+    }
+}
+
+void ChatApplication::handleHelpCommand()
+{
+    std::string helpMessage =
+        "[COMMAND HELP]\n"
+        "Available commands:\n"
+        "  /help                   - Show this help message\n"
+        "  /exit                   - Exit the application\n"
+        "  /peers                  - Show list of online peers\n"
+        "  /chats                  - Show all your chat conversations\n"
+        "  /chat <host:port>       - View chat history with specific peer\n"
+        "  /send <host:port> <msg> - Send a message to a specific peer\n\n"
+        "Examples:\n"
+        "  /chat 127.0.0.1:8001\n"
+        "  /send 127.0.0.1:8001 Hello, how are you?\n";
+
+    consoleUI->printLog(helpMessage);
+}
 
 ChatApplication::~ChatApplication()
 {
@@ -40,12 +301,40 @@ void ChatApplication::init()
     if (peerList.empty())
         consoleUI->printLog("[WARN] No trusted peers found in config. Can not connect to anyone\n");
 
-    peerService = std::make_shared<peer::PeerService>(peerList);
-    chatService = std::make_shared<chat::ChatService>(config, crypto, peerService, consoleUI);
+    db = std::make_shared<db::DBFile>(DB_PATH);
+    chainRepo = std::make_shared<blockchain::ChainDB>(db, config, crypto);
+    chainRepo->init();
+    messageRepo = std::make_shared<message::MessageDB>(db, config, crypto);
+    messageRepo->init();
+    peerRepo = std::make_shared<peer::PeerDB>(db);
+    peerRepo->init();
 
-    server = std::make_shared<network::TCPServer>(port, chatService);
-    client =
-        std::make_shared<network::TCPClient>(config, crypto, chatService, peerService, consoleUI);
+    blockchain::Block tip;
+    chainRepo->findTip(tip);
+
+    blockchainService =
+        std::make_shared<blockchain::BlockchainService>(config, crypto, chainRepo, consoleUI);
+    peerService = std::make_shared<peer::PeerService>(peerList, peerRepo);
+    messageService = std::make_shared<message::MessageService>(
+        messageRepo, chainRepo, blockchainService, config, crypto, consoleUI);
+    chatService = std::make_shared<chat::ChatService>(
+        config, crypto, peerService, blockchainService, messageService, consoleUI);
+
+    server = std::make_shared<network::TCPServer>(port, chatService, blockchainService, consoleUI);
+    client = std::make_shared<network::TCPClient>(config,
+                                                  crypto,
+                                                  chatService,
+                                                  peerService,
+                                                  blockchainService,
+                                                  messageService,
+                                                  consoleUI,
+                                                  tip.hash);
+
+    blockchainService->validateLocalChain();
+
+    u_int tipIndex = 0;
+    u_int count = 0;
+    chainRepo->findTipIndex(tipIndex);
 
     if (peerService->getPeersCount() > 0)
     {
@@ -53,15 +342,43 @@ void ChatApplication::init()
         u_int peersToReceive = globalState.getPeersToReceive();
         peer::UserPeer to = peerService->getPeer(0);
         u_int start = 0;
-        u_int end = peersToReceive > PEERS_BATCH_SIZE ? PEERS_BATCH_SIZE : peersToReceive;
 
-        do
+        while (start < peersToReceive)
         {
-            message::PeerListMessage message(from, to, utils::getTimestamp(), start, end);
-            client->sendMessage(message, false);
+            message::PeerListMessage message(
+                utils::uuidv4(), from, to, utils::getTimestamp(), start, PEERS_BATCH_SIZE);
+            client->sendMessage(message);
             start += PEERS_BATCH_SIZE;
-            end += PEERS_BATCH_SIZE;
-        } while (end < peersToReceive);
+        }
+
+        u_int blocksToReceive = globalState.getMissingBlocksCount();
+        start = 0;
+        while (start < blocksToReceive)
+        {
+            message::BlockRangeMessage message(utils::uuidv4(),
+                                               from,
+                                               to,
+                                               utils::getTimestamp(),
+                                               start,
+                                               BLOCKS_BATCH_SIZE,
+                                               tip.hash);
+            client->sendMessage(message);
+            start += BLOCKS_BATCH_SIZE;
+            count += BLOCKS_BATCH_SIZE;
+        }
+    }
+
+    if (blockchainService->validateNewBlocks())
+    {
+        std::vector<blockchain::Block> blocks = blockchainService->getNewBlocks();
+        for (const auto& block : blocks)
+        {
+            chainRepo->insertBlock(block);
+        }
+    }
+    else
+    {
+        consoleUI->printLog("[ERROR] Can not add new invalid blocks\n");
     }
 
     client->connectToAllPeers();
@@ -70,7 +387,7 @@ void ChatApplication::init()
 void ChatApplication::run()
 {
     server->start();
-    consoleUI->printLog("[INFO] Server started\n");
+    consoleUI->printLog("[INFO] Server started");
 
     consoleUI->startInputLoop(
         [this](const std::string& input)
@@ -82,67 +399,35 @@ void ChatApplication::run()
                 consoleUI->stop();
                 return;
             }
-
-            if (input.substr(0, 5) == "/send")
+            else if (input == "/peers")
+                handlePeersCommand();
+            else if (input == "/chats")
+                handleChatsCommand();
+            else if (input.substr(0, 5) == "/chat")
             {
-                try
-                {
-                    std::string command = input.substr(5);
-                    size_t start = command.find_first_not_of(" \t");
-                    if (start == std::string::npos)
-                    {
-                        consoleUI->printLog(
-                            "[ERROR] Invalid command format. Usage: /send <host:port> <message>");
-                    }
-                    command = command.substr(start);
-
-                    size_t spacePos = command.find(' ');
-                    if (spacePos == std::string::npos)
-                    {
-                        consoleUI->printLog(
-                            "[ERROR] Invalid command format. Usage: /send <host:port> <message>");
-                    }
-
-                    std::string hostPort = command.substr(0, spacePos);
-                    std::string message = command.substr(spacePos + 1);
-
-                    size_t colonPos = hostPort.find(':');
-                    if (colonPos == std::string::npos)
-                    {
-                        consoleUI->printLog(
-                            "[ERROR] Invalid host:port format. Usage: /send <host:port> <message>");
-                    }
-
-                    std::string host = hostPort.substr(0, colonPos);
-                    std::string portStr = hostPort.substr(colonPos + 1);
-
-                    if (portStr.empty() || !std::all_of(portStr.begin(), portStr.end(), ::isdigit))
-                    {
-                        consoleUI->printLog(
-                            "[ERROR] Port must be a number. Usage: /send <host:port> <message>");
-                    }
-
-                    int port = std::stoi(portStr);
-
-                    peer::UserPeer to = peerService->findPeer(peer::UserHost(host, port));
-                    uint64_t timestamp = utils::getTimestamp();
-
-                    message::TextMessage sendMessage(from, to, timestamp, message);
-                    client->sendMessage(sendMessage, true);
-                }
-                catch (std::exception& error)
-                {
-                    consoleUI->printLog("[ERROR] " + std::string(error.what()));
-                }
+                if (input.size() > 6)
+                    handleChatCommand(input.substr(5));
+                else
+                    consoleUI->printLog(
+                        "[ERROR] Invalid command format. Usage: /chat <host:port>\n");
             }
-            else
-                consoleUI->printLog("[YOU] " + input);
+            else if (input.substr(0, 5) == "/send")
+                handleSendCommand(input.substr(5));
+            else if (input.substr(0, 5) == "/help")
+
+                handleHelpCommand();
+
+            else if (!input.empty())
+            {
+                consoleUI->printLog("[YOU] " + input + "\n");
+            }
         });
 
     running.store(true, std::memory_order_relaxed);
-
     while (running.load(std::memory_order_relaxed))
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
+
 }  // namespace app

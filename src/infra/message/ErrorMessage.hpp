@@ -15,7 +15,8 @@ protected:
 
 public:
     ErrorMessageResponse();
-    ErrorMessageResponse(const peer::UserPeer& from,
+    ErrorMessageResponse(const std::string& id,
+                         const peer::UserPeer& from,
                          const peer::UserPeer& to,
                          uint64_t timestamp,
                          const std::string& error);

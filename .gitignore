@@ -51,5 +51,7 @@ cmake-build-debug
 # vcpkg
 vcpkg_installed
 
-#config
+# production files
 d-chat_config.json
+d-chat.db
+d-chat.db*

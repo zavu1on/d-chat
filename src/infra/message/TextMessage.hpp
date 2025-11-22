@@ -18,32 +18,39 @@ class TextMessage : public SecretMessage
 private:
     crypto::Bytes createSessionKey(const std::string& privateKey,
                                    const std::string& publicKey,
-                                   std::shared_ptr<crypto::ICrypto> crypto) const;
+                                   const std::shared_ptr<crypto::ICrypto>& crypto) const;
 
 protected:
     TextMessagePayload payload;
 
 public:
     TextMessage();
-    TextMessage(const peer::UserPeer& from,
+    TextMessage(const std::string& id,
+                const peer::UserPeer& from,
                 const peer::UserPeer& to,
                 uint64_t timestamp,
-                const std::string& message);
+                const std::string& message,
+                const std::string& blockHash);
     TextMessage(const json& jData,
                 const std::string& privateKey,
-                std::shared_ptr<crypto::ICrypto> crypto);
+                const std::shared_ptr<crypto::ICrypto>& crypto,
+                bool invertFromTo = false);
 
     void serialize(json& jData,
                    const std::string& privateKey,
-                   std::shared_ptr<crypto::ICrypto> crypto) const override;
+                   const std::shared_ptr<crypto::ICrypto>& crypto) const override;
     const TextMessagePayload& getPayload() const;
+    void setBlockHash(const std::string& blockHash);
 };
 
 class TextMessageResponse : public Message
 {
 public:
     TextMessageResponse();
-    TextMessageResponse(const peer::UserPeer& from, const peer::UserPeer& to, uint64_t timestamp);
+    TextMessageResponse(const std::string& id,
+                        const peer::UserPeer& from,
+                        const peer::UserPeer& to,
+                        uint64_t timestamp);
     TextMessageResponse(const json& jData);
 
     void serialize(json& jData) const override;
