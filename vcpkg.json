@@ -4,6 +4,7 @@
   "dependencies": [
     "nlohmann-json",
     "openssl",
-    "sqlite3"
+    "sqlite3",
+    "gtest"
   ]
 }

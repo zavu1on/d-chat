@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(d-chat VERSION 0.1 LANGUAGES CXX)
+project(d-chat VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +31,13 @@ else()
     set(CMAKE_BUILD_TYPE Debug)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
     message(STATUS "Debug mode: compiler warnings are disabled.")
+endif()
+
+option(BUILD_TESTS "Build test suite" OFF)
+
+if(BUILD_TESTS)
+    message(STATUS "Building tests enabled")
+    add_subdirectory(tests)
 endif()
 
 add_subdirectory(src/ui)

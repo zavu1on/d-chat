@@ -57,6 +57,7 @@ cmake -S . -B "%BUILD_DIR%" ^
   -DCMAKE_C_COMPILER="%CC%" ^
   -DCMAKE_CXX_COMPILER="%CXX%" ^
   -DVCPKG_TARGET_TRIPLET=x64-mingw-static ^
+  -DBUILD_TESTS=OFF ^
   %EXTRA_CMAKE_ARGS%
 if errorlevel 1 (
   echo [ERROR] CMake configuration failed.

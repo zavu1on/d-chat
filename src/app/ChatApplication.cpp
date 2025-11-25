@@ -7,11 +7,42 @@
 #include "timestamp.hpp"
 #include "uuid.hpp"
 
+// todo обработка закрытия окна
+// todo ConsoleUI
+// todo signature
+/*
+7. UI и пользовательский опыт
+⌨️ Сценарий: Ввод команды во время печати логов
+
+Шаги:
+
+В консоли активно печатаются логи от входящих соединений
+Пользователь начинает вводить команду /send
+
+
+Проверить: Ввод не ломается благодаря consoleMutex
+
+🔄 Сценарий: Быстрый рестарт приложения
+
+Шаги:
+
+Запустить узел A, отправить несколько сообщений
+Закрыть приложение
+Сразу перезапустить
+
+
+Проверить:
+
+БД не повреждена
+Порт освобождён корректно
+История сообщений загружается
+*/
+
 namespace app
 {
-const u_int PEERS_BATCH_SIZE = 12;
-const u_int BLOCKS_BATCH_SIZE = 4;
-const char* DB_PATH = "d-chat.db";
+constexpr const u_int PEERS_BATCH_SIZE = 12;
+constexpr const u_int BLOCKS_BATCH_SIZE = 4;
+constexpr const char* DB_PATH = "d-chat.db";
 
 void ChatApplication::handlePeersCommand()
 {
@@ -414,13 +445,9 @@ void ChatApplication::run()
             else if (input.substr(0, 5) == "/send")
                 handleSendCommand(input.substr(5));
             else if (input.substr(0, 5) == "/help")
-
                 handleHelpCommand();
-
             else if (!input.empty())
-            {
                 consoleUI->printLog("[YOU] " + input + "\n");
-            }
         });
 
     running.store(true, std::memory_order_relaxed);

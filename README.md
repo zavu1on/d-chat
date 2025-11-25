@@ -50,6 +50,7 @@ What is implemented (high level)
 - Blockchain primitives: `Block` structure with canonical stringization and SHA256 hashing; `BlockchainService` provides basic validation, storing and broadcasting of blocks.
 - Networking: TCP server and client implementation with JSON messages and simple request/response handling.
 - Basic chain sync: request peer lists and block ranges on startup, store and validate received blocks.
+- Test coverage: unit tests, integration tests, and end-to-end tests of all modules.
 
 Planned / next tasks
 - Enhance consensus and fork handling: stronger validation, reorg handling, conflict resolution, partial restoration of the blockchain.

@@ -4,7 +4,8 @@ add_executable(
     ChatApplication.cpp
 )
 
-target_link_libraries(d-chat_main
+target_link_libraries(
+    d-chat_main
     PRIVATE
     d-chat_ui
     d-chat_utils

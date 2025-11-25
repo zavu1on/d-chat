@@ -11,26 +11,30 @@ void ChatService::handleIncomingErrorMessage(const json& jData,
                                              const std::string& error,
                                              std::string& response)
 {
-    if (jData.contains("from") && jData["from"].contains("host") &&
-        jData["from"].contains("port") && jData["from"].contains("public_key"))
+    if (jData.contains("from"))
     {
-        std::string host = config->get(config::ConfigField::HOST);
-        unsigned short port =
-            static_cast<unsigned short>(stoi(config->get(config::ConfigField::PORT)));
-        std::string publicKey = config->get(config::ConfigField::PUBLIC_KEY);
+        if (jData["from"].contains("host") && jData["from"].contains("port") &&
+            jData["from"].contains("public_key"))
+        {
+            std::string host = config->get(config::ConfigField::HOST);
+            unsigned short port =
+                static_cast<unsigned short>(stoi(config->get(config::ConfigField::PORT)));
+            std::string publicKey = config->get(config::ConfigField::PUBLIC_KEY);
 
-        peer::UserPeer me(host, port, publicKey);
-        peer::UserPeer to(jData["from"]);
-        uint64_t timestamp = utils::getTimestamp();
+            peer::UserPeer me(host, port, publicKey);
+            peer::UserPeer to(jData["from"]);
+            uint64_t timestamp = utils::getTimestamp();
 
-        message::ErrorMessageResponse errorMessage(utils::uuidv4(), me, to, timestamp, error);
-        json jData;
-        errorMessage.serialize(jData);
+            message::ErrorMessageResponse errorMessage(utils::uuidv4(), me, to, timestamp, error);
+            json jData;
+            errorMessage.serialize(jData);
 
-        response = jData.dump();
+            response = jData.dump();
+            return;
+        }
     }
-    else
-        response = "{}";
+
+    response = R"({"type":"ERROR_RESPONSE","error":"Invalid request"})";
 }
 
 void ChatService::handleOutgoingBlockchainErrorMessage(
@@ -272,7 +276,11 @@ void ChatService::handleIncomingMessage(const json& jMessage, std::string& respo
             handleIncomingDisconnectionMessage(message, response);
         }
         else
-            response = "{}";
+            response = R"({"type":"ERROR_RESPONSE","error":"Invalid message type"})";
+    }
+    catch (json::exception& error)
+    {
+        response = R"({"type":"ERROR_RESPONSE","error":"Invalid data format"})";
     }
     catch (std::exception& error)
     {
