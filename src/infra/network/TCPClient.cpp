@@ -83,7 +83,6 @@ void TCPClient::sendMessage(const message::Message& message)
 
 void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 {
-    // send message (with text content)
     peer::UserPeer to = message.getTo();
     client.connectTo(to.host, to.port);
 
@@ -93,7 +92,6 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 
     if (jMessage.size() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
 
-    // create block
     blockchain::Block block;
     blockchainService->createBlockFromMessage(textMessage, block);
     textMessage.setBlockHash(block.hash);
@@ -108,7 +106,6 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
     }
     client.disconnect();
 
-    // broadcast block (without text content)
     std::vector<peer::UserPeer> peers = peerService->getPeers();
 
     auto sendCallback = [this](const std::string& raw, const peer::UserPeer& peer) -> bool

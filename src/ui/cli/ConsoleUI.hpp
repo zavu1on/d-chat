@@ -7,8 +7,8 @@
 #include <string>
 #include <thread>
 
-namespace ui {
-
+namespace ui
+{
 class ConsoleUI
 {
 private:
@@ -28,4 +28,4 @@ public:
     void setCurrentInput(const std::string& s);
 };
 
-} // namespace ui
+}  // namespace ui

@@ -52,7 +52,7 @@ What is implemented (high level)
 - Basic chain sync: request peer lists and block ranges on startup, store and validate received blocks.
 
 Planned / next tasks
-- Enhance consensus and fork handling: stronger validation, reorg handling, and conflict resolution (partial restoration of the blockchain f.e.).
+- Enhance consensus and fork handling: stronger validation, reorg handling, conflict resolution, partial restoration of the blockchain.
 - Add automated tests for message serialization and blockchain validation.
 - Add a lightweight GUI.
 

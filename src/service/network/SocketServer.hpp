@@ -10,7 +10,7 @@
 
 namespace network
 {
-const u_int BUFFER_SIZE = 32768;
+constexpr const u_int BUFFER_SIZE = 32768;
 
 class SocketServer
 {

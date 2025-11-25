@@ -164,7 +164,7 @@ void ChatService::handleOutgoingPeerListMessage(const message::PeerListMessageRe
     for (const auto& peer : payload.peers)
     {
         peerService->addPeer(peer);
-        consoleUI->printLog("[CLIENT] added peer from PEER_LIST" + peer.host + ":" +
+        consoleUI->printLog("[CLIENT] added peer from PEER_LIST " + peer.host + ":" +
                             std::to_string(peer.port) + "\n");
     }
 }
