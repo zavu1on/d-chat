@@ -43,9 +43,9 @@ private:
     void handleChatCommand(const std::string& args);
     void handleSendCommand(const std::string& args);
     void handleHelpCommand();
+    void shutdown();
 
 public:
-    ~ChatApplication();
     void init();
     void run();
 };
