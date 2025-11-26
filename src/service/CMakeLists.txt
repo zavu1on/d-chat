@@ -4,7 +4,6 @@ add_library(
     network/SocketServer.cpp
     network/SocketClient.cpp
     json/JsonFile.hpp
-    crypto/XORCrypto.cpp
     crypto/OpenSSLCrypto.cpp
     db/DBFile.cpp
 )

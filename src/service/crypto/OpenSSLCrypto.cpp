@@ -1,5 +1,6 @@
 #include "OpenSSLCrypto.hpp"
 
+#include <openssl/buffer.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/kdf.h>
@@ -15,20 +16,8 @@
 
 namespace crypto
 {
-void OpenSSLCrypto::throwIf(bool cond, const char* msg)
-{
-    if (cond) throw std::runtime_error(msg);
-}
 
-OpenSSLCrypto::OpenSSLCrypto() { initOpenSSL(); }
-OpenSSLCrypto::~OpenSSLCrypto() { cleanupOpenSSL(); }
-
-void OpenSSLCrypto::initOpenSSL() noexcept { OPENSSL_init_crypto(0, nullptr); }
-
-void OpenSSLCrypto::cleanupOpenSSL() noexcept
-{
-    // modern OpenSSL doesn't require explicit cleanup for our usage
-}
+OpenSSLCrypto::OpenSSLCrypto() { OPENSSL_init_crypto(0, nullptr); }
 
 // Returns cryptographic random bytes
 Bytes OpenSSLCrypto::generateSecret(size_t bytes)
@@ -103,9 +92,6 @@ EVP_PKEY* OpenSSLCrypto::evpFromPem(const std::string& pem) noexcept
     BIO_free(bio);
     return pkey;  // may be nullptr
 }
-
-#include <openssl/buffer.h>
-#include <openssl/evp.h>
 
 std::string OpenSSLCrypto::keyToString(const Bytes& k)
 {

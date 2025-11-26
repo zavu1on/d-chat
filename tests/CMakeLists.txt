@@ -4,6 +4,7 @@ add_library(
     test_helpers
     STATIC
     helpers/test_helpers.cpp
+    helpers/XORCrypto.cpp
 )
 
 target_include_directories(
@@ -31,6 +32,7 @@ add_executable(
     unit/config_test.cpp
     unit/utils_test.cpp
     unit/database_test.cpp
+    unit/xor_crypto_test.cpp
 )
 
 target_link_libraries(
@@ -53,6 +55,7 @@ add_executable(
     integration/peer_service_test.cpp
     integration/chat_service_test.cpp
     integration/network_test.cpp
+    integration/xor_crypto_test.cpp
 )
 
 target_link_libraries(

@@ -1,6 +1,5 @@
 #pragma once
 #include <OpenSSLCrypto.hpp>
-#include <XORCrypto.hpp>
 #include <iostream>
 #include <memory>
 

@@ -8,9 +8,15 @@ namespace crypto
 {
 class OpenSSLCrypto : public ICrypto
 {
+private:
+    std::string pemFromEVP(EVP_PKEY* pkey, bool pub) noexcept;
+    EVP_PKEY* evpFromPem(const std::string& pem) noexcept;
+
+    Bytes aes_gcm_encrypt(const Bytes& key, const Bytes& plain);
+    Bytes aes_gcm_decrypt(const Bytes& key, const Bytes& in);  // in = iv|tag|cipher
+
 public:
     OpenSSLCrypto();
-    ~OpenSSLCrypto() override;
 
     Bytes generateSecret(size_t bytes = 32) override;
 
@@ -26,18 +32,5 @@ public:
 
     Bytes sign(const Bytes& message, const Bytes& privateKey) override;  // ECDSA
     bool verify(const Bytes& message, const Bytes& signature, const Bytes& publicKey) override;
-
-private:
-    void initOpenSSL() noexcept;
-    void cleanupOpenSSL() noexcept;
-
-    std::string pemFromEVP(EVP_PKEY* pkey, bool pub) noexcept;
-    EVP_PKEY* evpFromPem(const std::string& pem) noexcept;
-
-    Bytes aes_gcm_encrypt(const Bytes& key, const Bytes& plain);
-    Bytes aes_gcm_decrypt(const Bytes& key, const Bytes& in);  // in = iv|tag|cipher
-
-    // helper
-    static void throwIf(bool cond, const char* msg);
 };
 }  // namespace crypto

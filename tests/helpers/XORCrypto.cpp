@@ -1,3 +1,4 @@
+
 #include "XORCrypto.hpp"
 
 #include <algorithm>
@@ -7,17 +8,14 @@
 
 namespace crypto
 {
-// for sha256 use minimal implementation via std::hash-like fallback if OpenSSL absent.
-// For simplicity here we use a tiny wrapper to std::hash on blocks (not cryptographically secure)
-// but for integrity (block hashing) we'll use OpenSSLCrypto if available.
-// NOTE: This XORCrypto is for demo; you already have OpenSSL implementation for production.
 
 Bytes XORCrypto::sha256_bytes(const Bytes& data)
 {
-    // fallback tiny hash: not secure; but used only in XORCrypto sign placeholder.
-    // Use OpenSSLCrypto for production hashing.
     Bytes out(32, 0);
-    for (size_t i = 0; i < data.size(); ++i) out[i % 32] ^= data[i];
+    for (size_t i = 0; i < data.size(); ++i)
+    {
+        out[i % 32] ^= data[i];
+    }
     return out;
 }
 
@@ -30,19 +28,24 @@ XORCrypto::XORCrypto()
 Bytes XORCrypto::generateSecret(size_t bytes)
 {
     Bytes out(bytes);
-    for (size_t i = 0; i < bytes; ++i) out[i] = static_cast<uint8_t>(m_rng() & 0xFF);
+    for (size_t i = 0; i < bytes; ++i)
+    {
+        out[i] = static_cast<uint8_t>(m_rng() & 0xFF);
+    }
     return out;
 }
 
 KeyPair XORCrypto::generateKeyPair()
 {
     KeyPair kp;
-    kp.privateKey = generateSecret(32);
-    kp.publicKey = generateSecret(32);
+    Bytes secret = generateSecret(32);
+    kp.privateKey = secret;
+    kp.publicKey = secret;  // publicKey == privateKey
     return kp;
 }
 
 std::string XORCrypto::keyToString(const Bytes& k) { return utils::toHex(k); }
+
 Bytes XORCrypto::stringToKey(const std::string& s) { return utils::fromHex(s); }
 
 Bytes XORCrypto::createSessionKey(const Bytes& privateKey, const Bytes& peerPublicKey)
@@ -53,9 +56,12 @@ Bytes XORCrypto::createSessionKey(const Bytes& privateKey, const Bytes& peerPubl
     {
         tmp[i] = privateKey[i % privateKey.size()] ^ peerPublicKey[i % peerPublicKey.size()];
     }
-    // reduce to 32 bytes by simple folding/XOR (not cryptographically ideal, but consistent)
+
     Bytes out(32, 0);
-    for (size_t i = 0; i < tmp.size(); ++i) out[i % 32] ^= tmp[i];
+    for (size_t i = 0; i < tmp.size(); ++i)
+    {
+        out[i % 32] ^= tmp[i];
+    }
     return out;
 }
 
@@ -63,9 +69,14 @@ Bytes XORCrypto::encrypt(const Bytes& message, const Bytes& key)
 {
     Bytes out(message.size());
     if (key.empty()) return out;
-    for (size_t i = 0; i < message.size(); ++i) out[i] = message[i] ^ key[i % key.size()];
+
+    for (size_t i = 0; i < message.size(); ++i)
+    {
+        out[i] = message[i] ^ key[i % key.size()];
+    }
     return out;
 }
+
 Bytes XORCrypto::decrypt(const Bytes& cipher, const Bytes& key) { return encrypt(cipher, key); }
 
 Bytes XORCrypto::sign(const Bytes& message, const Bytes& privateKey)
@@ -79,8 +90,21 @@ Bytes XORCrypto::sign(const Bytes& message, const Bytes& privateKey)
 
 bool XORCrypto::verify(const Bytes& message, const Bytes& signature, const Bytes& publicKey)
 {
-    (void)message;
-    (void)publicKey;
-    return signature.size() == 32;
+    Bytes concat;
+    concat.reserve(publicKey.size() + message.size());
+    concat.insert(concat.end(), publicKey.begin(), publicKey.end());
+    concat.insert(concat.end(), message.begin(), message.end());
+
+    Bytes expectedSignature = sha256_bytes(concat);
+
+    if (signature.size() != expectedSignature.size()) return false;
+
+    uint8_t diff = 0;
+    for (size_t i = 0; i < signature.size(); ++i)
+    {
+        diff |= signature[i] ^ expectedSignature[i];
+    }
+
+    return diff == 0;
 }
 }  // namespace crypto
