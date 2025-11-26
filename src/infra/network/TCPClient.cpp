@@ -15,8 +15,7 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
                      const std::shared_ptr<message::MessageService>& messageService,
                      const std::shared_ptr<ui::ConsoleUI>& consoleUI,
                      const std::string& lastHash)
-    : client(),
-      config(config),
+    : config(config),
       crypto(crypto),
       chatService(chatService),
       peerService(peerService),
@@ -60,11 +59,10 @@ void TCPClient::connectToAllPeers()
 void TCPClient::sendMessage(const message::Message& message)
 {
     if (typeid(message) == typeid(message::SecretMessage))
-    {
         throw std::runtime_error("Secret messages should be sent by sendBlock() method");
-    };
 
     peer::UserPeer to = message.getTo();
+    SocketClient client;
     client.connectTo(to.host, to.port);
 
     json jMessage;
@@ -84,6 +82,7 @@ void TCPClient::sendMessage(const message::Message& message)
 void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 {
     peer::UserPeer to = message.getTo();
+    SocketClient client;
     client.connectTo(to.host, to.port);
 
     json jMessage;
@@ -110,6 +109,7 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 
     auto sendCallback = [this](const std::string& raw, const peer::UserPeer& peer) -> bool
     {
+        SocketClient client;
         client.connectTo(peer.host, peer.port);
         bool ok = client.sendMessage(raw);
         client.disconnect();

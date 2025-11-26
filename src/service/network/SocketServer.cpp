@@ -8,9 +8,9 @@ void SocketServer::listenMessages(MessageHandler onMessage)
     if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
         throw std::runtime_error("Failed to listen on socket");
 
-    isListening.store(true, std::memory_order_relaxed);
+    isListening.store(true, std::memory_order_release);
 
-    while (isListening.load(std::memory_order_relaxed))
+    while (isListening.load(std::memory_order_acquire))
     {
         sockaddr_in clientAddr{};
         int clientSize = sizeof(clientAddr);
@@ -42,7 +42,7 @@ void SocketServer::listenMessages(MessageHandler onMessage)
         }
         catch (...)
         {
-            isListening.store(false, std::memory_order_relaxed);
+            isListening.store(false, std::memory_order_release);
             closesocket(clientSocket);
             throw std::runtime_error("Failed to handle message");
         }
@@ -77,7 +77,7 @@ SocketServer::SocketServer(u_short port)
         throw std::runtime_error("Failed to bind socket");
     }
 
-    isListening.store(false, std::memory_order_relaxed);
+    isListening.store(false, std::memory_order_release);
 }
 
 SocketServer::~SocketServer()
@@ -92,12 +92,12 @@ SocketServer::SocketServer(SocketServer&& other) noexcept
     : wsaData(other.wsaData),
       listenSocket(other.listenSocket),
       serverAddr(other.serverAddr),
-      isListening(other.isListening.load(std::memory_order_relaxed))
+      isListening(other.isListening.load(std::memory_order_acquire))
 {
     if (other.listenThread.joinable()) other.listenThread.detach();
 
     other.listenSocket = INVALID_SOCKET;
-    other.isListening.store(false, std::memory_order_relaxed);
+    other.isListening.store(false, std::memory_order_release);
 }
 
 SocketServer& SocketServer::operator=(SocketServer&& other) noexcept
@@ -110,17 +110,17 @@ SocketServer& SocketServer::operator=(SocketServer&& other) noexcept
 
         listenSocket = other.listenSocket;
         serverAddr = other.serverAddr;
-        isListening.store(other.isListening.load(std::memory_order_relaxed));
+        isListening.store(other.isListening.load(std::memory_order_acquire));
 
         other.listenSocket = INVALID_SOCKET;
-        other.isListening.store(false, std::memory_order_relaxed);
+        other.isListening.store(false, std::memory_order_release);
     }
     return *this;
 }
 
 bool SocketServer::startAsync(MessageHandler onMessage)
 {
-    if (!isListening.load(std::memory_order_relaxed))
+    if (!isListening.load(std::memory_order_acquire))
     {
         listenThread = std::thread(&SocketServer::listenMessages, this, onMessage);
         listenThread.detach();
@@ -133,10 +133,10 @@ bool SocketServer::startAsync(MessageHandler onMessage)
 void SocketServer::stop()
 {
     if (listenThread.joinable()) listenThread.join();
-    isListening.store(false, std::memory_order_relaxed);
+    isListening.store(false, std::memory_order_release);
 }
 
-bool SocketServer::listening() const { return isListening.load(std::memory_order_relaxed); }
+bool SocketServer::listening() const { return isListening.load(std::memory_order_acquire); }
 
 u_short SocketServer::getPort() const { return ntohs(serverAddr.sin_port); }
 }  // namespace network

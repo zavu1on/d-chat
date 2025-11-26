@@ -65,10 +65,15 @@ BlockchainService::BlockchainService(const std::shared_ptr<config::IConfig>& con
 {
 }
 
-std::vector<Block> BlockchainService::getNewBlocks() const { return newBlocks; }
+std::vector<Block> BlockchainService::getNewBlocks() const
+{
+    std::lock_guard<std::mutex> lock(newBlocksMutex);
+    return newBlocks;
+}
 
 void BlockchainService::addNewBlockRange(const std::vector<Block>& blocks)
 {
+    std::lock_guard<std::mutex> lock(newBlocksMutex);
     newBlocks.insert(newBlocks.end(), blocks.begin(), blocks.end());
 }
 
@@ -235,6 +240,8 @@ bool BlockchainService::validateIncomingBlock(const Block& block, std::string& e
 
 bool BlockchainService::validateNewBlocks()
 {
+    std::lock_guard<std::mutex> lock(newBlocksMutex);
+
     if (newBlocks.empty()) return true;
 
     for (size_t i = 1; i < newBlocks.size(); ++i)

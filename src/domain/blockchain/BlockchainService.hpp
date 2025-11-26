@@ -20,7 +20,9 @@ private:
     std::shared_ptr<crypto::ICrypto> crypto;
     std::shared_ptr<IChainRepo> chainRepo;
     std::shared_ptr<ui::ConsoleUI> consoleUI;
+
     std::vector<Block> newBlocks;
+    mutable std::mutex newBlocksMutex;
 
     bool verifyBlockSignature(const Block& block);
     bool validateSingleBlock(const Block& block, std::string& error);

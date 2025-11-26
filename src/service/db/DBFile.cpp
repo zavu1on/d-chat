@@ -118,5 +118,9 @@ void DBFile::bindParams(sqlite3_stmt* stmt, const std::vector<std::string>& para
     }
 }
 
-bool DBFile::isOpen() const { return db != nullptr; }
+bool DBFile::isOpen()
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    return db != nullptr;
+}
 }  // namespace db

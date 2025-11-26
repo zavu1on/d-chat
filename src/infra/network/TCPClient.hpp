@@ -12,7 +12,6 @@
 #include "PeerService.hpp"
 #include "SocketClient.hpp"
 
-
 namespace network
 {
 using json = nlohmann::json;
@@ -20,7 +19,6 @@ using json = nlohmann::json;
 class TCPClient : public IChatClient
 {
 private:
-    SocketClient client;
     std::shared_ptr<config::IConfig> config;
     std::shared_ptr<crypto::ICrypto> crypto;
     std::shared_ptr<chat::ChatService> chatService;
