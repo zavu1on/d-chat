@@ -86,6 +86,42 @@ void DBFile::select(const std::string& sql,
     sqlite3_finalize(stmt);
 }
 
+void DBFile::selectPrepared(const std::string& sql,
+                            const std::vector<std::string>& params,
+                            const std::function<void(const std::vector<std::string>&)>& callback)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+
+    if (!db) open();
+
+    sqlite3_stmt* stmt = nullptr;
+    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    if (rc != SQLITE_OK)
+    {
+        std::string err = sqlite3_errmsg(db);
+        throw std::runtime_error("DBFile selectPrepared prepare failed: " + err);
+    }
+
+    bindParams(stmt, params);
+
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+    {
+        int colCount = sqlite3_column_count(stmt);
+        std::vector<std::string> row;
+        row.reserve(colCount);
+
+        for (int i = 0; i < colCount; ++i)
+        {
+            const unsigned char* text = sqlite3_column_text(stmt, i);
+            row.emplace_back(text ? reinterpret_cast<const char*>(text) : "");
+        }
+
+        callback(row);
+    }
+
+    sqlite3_finalize(stmt);
+}
+
 bool DBFile::executePrepared(const std::string& sql, const std::vector<std::string>& params)
 {
     std::lock_guard<std::mutex> lock(mutex);

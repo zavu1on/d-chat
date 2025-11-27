@@ -54,7 +54,7 @@ What is implemented (high level)
 
 Planned / next tasks
 - Enhance consensus and fork handling: stronger validation, reorg handling, conflict resolution, partial restoration of the blockchain.
-- Add automated tests for message serialization and blockchain validation.
+- Make the server multithreaded: handle multiple clients in parallel, provide thread-safe access to the blockchain.
 - Add a lightweight GUI.
 
 **Build & run (Windows) — detailed, machine-independent instructions**

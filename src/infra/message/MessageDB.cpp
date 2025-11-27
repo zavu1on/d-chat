@@ -37,20 +37,20 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    db->select(
+    db->selectPrepared(
         "SELECT message_json "
-        "FROM messages WHERE to_public_key='" +
-            peerAPublicKey + "' AND from_public_key='" + peerBPublicKey + "';",
+        "FROM messages WHERE to_public_key=? AND from_public_key=?;",
+        { peerAPublicKey, peerBPublicKey },
         [&](const std::vector<std::string>& row)
         {
             if (row.size() < 1) return;
             json jData = json::parse(row[0]);
             messages.emplace_back(jData, config->get(config::ConfigField::PRIVATE_KEY), crypto);
         });
-    db->select(
+    db->selectPrepared(
         "SELECT message_json "
-        "FROM messages WHERE to_public_key='" +
-            peerBPublicKey + "' AND from_public_key='" + peerAPublicKey + "';",
+        "FROM messages WHERE to_public_key=? AND from_public_key=?;",
+        { peerBPublicKey, peerAPublicKey },
         [&](const std::vector<std::string>& row)
         {
             if (row.size() < 1) return;
@@ -70,15 +70,16 @@ bool MessageDB::findBlockHashByMessageId(const std::string& messageId, std::stri
     std::lock_guard<std::mutex> lock(mutex);
     bool found = false;
 
-    db->select("SELECT block_hash FROM messages WHERE message_id='" + messageId + "' LIMIT 1;",
-               [&](const std::vector<std::string>& row)
-               {
-                   if (!row.empty())
-                   {
-                       blockHash = row[0];
-                       found = true;
-                   }
-               });
+    db->selectPrepared("SELECT block_hash FROM messages WHERE message_id=? LIMIT 1;",
+                       { messageId },
+                       [&](const std::vector<std::string>& row)
+                       {
+                           if (!row.empty())
+                           {
+                               blockHash = row[0];
+                               found = true;
+                           }
+                       });
 
     return found;
 }

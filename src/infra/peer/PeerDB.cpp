@@ -38,11 +38,12 @@ void PeerDB::addPeer(const UserPeer& peer)
     std::lock_guard<std::mutex> lock(mutex);
 
     bool found = false;
-    db->select("SELECT id FROM peers WHERE public_key='" + peer.publicKey + "' LIMIT 1;",
-               [&](const std::vector<std::string>& row)
-               {
-                   if (!row.empty()) found = true;
-               });
+    db->selectPrepared("SELECT id FROM peers WHERE public_key=? LIMIT 1;",
+                       { peer.publicKey },
+                       [&](const std::vector<std::string>& row)
+                       {
+                           if (!row.empty()) found = true;
+                       });
 
     if (!found)
     {
@@ -55,14 +56,13 @@ bool PeerDB::findPublicKeyByUserHost(const UserHost& host, std::string& publicKe
 {
     std::lock_guard<std::mutex> lock(mutex);
 
-    db->select("SELECT public_key FROM peers WHERE host='" + host.host +
-                   "' AND port=" + std::to_string(host.port) + " LIMIT 1;",
-               [&](const std::vector<std::string>& row)
-               {
-                   if (!row.empty()) publicKey = row[0];
-               });
+    db->selectPrepared("SELECT public_key FROM peers WHERE host=? AND port=? LIMIT 1;",
+                       { host.host, std::to_string(host.port) },
+                       [&](const std::vector<std::string>& row)
+                       {
+                           if (!row.empty()) publicKey = row[0];
+                       });
 
     return !publicKey.empty();
 }
-
 }  // namespace peer

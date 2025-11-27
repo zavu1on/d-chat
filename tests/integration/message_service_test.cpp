@@ -120,7 +120,6 @@ TEST_F(MessageServiceTest, FindInvalidChatMessageIDsDetectsInvalidMessages)
     nlohmann::json jData;
     msg.serialize(jData, crypto->keyToString(keyPair1.privateKey), crypto);
 
-    // Insert message without corresponding block
     EXPECT_TRUE(messageService->insertSecretMessage(msg, jData.dump(), "nonexistent_block"));
 
     std::vector<message::TextMessage> messages;

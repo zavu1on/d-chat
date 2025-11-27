@@ -29,6 +29,10 @@ public:
     void select(const std::string& sql,
                 const std::function<void(const std::vector<std::string>&)>& callback);
     bool executePrepared(const std::string& sql, const std::vector<std::string>& params);
+    void selectPrepared(const std::string& sql,
+                        const std::vector<std::string>& params,
+                        const std::function<void(const std::vector<std::string>&)>& callback);
+
     bool isOpen();
 };
 }  // namespace db
