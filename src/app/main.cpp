@@ -1,4 +1,3 @@
-
 #include "ChatApplication.hpp"
 
 int main()

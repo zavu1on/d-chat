@@ -14,15 +14,16 @@ void DBFile::open()
 
     if (db) return;
 
-    int rc = sqlite3_open(path.c_str(), &db);
+    int rc = sqlite3_open(path.c_str(), &db);  // open database
     if (rc != SQLITE_OK)
     {
-        std::string msg = sqlite3_errmsg(db);
+        std::string msg = sqlite3_errmsg(db);  // get error message
         sqlite3_close(db);
         db = nullptr;
         throw std::runtime_error("DBFile: failed to open database: " + msg);
     }
 
+    // enable journal files, that prevents data loss
     sqlite3_exec(db, "PRAGMA journal_mode=WAL;", nullptr, nullptr, nullptr);
 }
 
@@ -31,7 +32,7 @@ void DBFile::close()
     std::lock_guard<std::mutex> lock(mutex);
     if (db)
     {
-        sqlite3_close(db);
+        sqlite3_close(db);  // close database
         db = nullptr;
     }
 }
@@ -43,7 +44,8 @@ void DBFile::exec(const std::string& sql)
     if (!db) open();
 
     char* errMsg = nullptr;
-    int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+    int rc = sqlite3_exec(
+        db, sql.c_str(), nullptr, nullptr, &errMsg);  // execute sql, returns result code
 
     if (rc != SQLITE_OK)
     {
@@ -60,14 +62,16 @@ void DBFile::select(const std::string& sql,
 
     if (!db) open();
 
-    sqlite3_stmt* stmt = nullptr;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+    sqlite3_stmt* stmt = nullptr;  // for sqlite params
+    int rc = sqlite3_prepare_v2(
+        db, sql.c_str(), -1, &stmt, nullptr);  // prepare sql and create statement (stmt)
     if (rc != SQLITE_OK)
     {
         std::string err = sqlite3_errmsg(db);
         throw std::runtime_error("DBFile select prepare failed: " + err);
     }
 
+    // execute all sql lines
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
     {
         int colCount = sqlite3_column_count(stmt);
@@ -83,7 +87,7 @@ void DBFile::select(const std::string& sql,
         callback(row);
     }
 
-    sqlite3_finalize(stmt);
+    sqlite3_finalize(stmt);  // delete sqlite stmt
 }
 
 void DBFile::selectPrepared(const std::string& sql,
@@ -102,6 +106,7 @@ void DBFile::selectPrepared(const std::string& sql,
         throw std::runtime_error("DBFile selectPrepared prepare failed: " + err);
     }
 
+    // bind params safely
     bindParams(stmt, params);
 
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
@@ -138,6 +143,7 @@ bool DBFile::executePrepared(const std::string& sql, const std::vector<std::stri
         return false;
     }
 
+    // bind params safely
     bindParams(stmt, params);
 
     rc = sqlite3_step(stmt);
@@ -150,7 +156,11 @@ void DBFile::bindParams(sqlite3_stmt* stmt, const std::vector<std::string>& para
 {
     for (size_t i = 0; i < params.size(); ++i)
     {
-        sqlite3_bind_text(stmt, static_cast<int>(i + 1), params[i].c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt,
+                          static_cast<int>(i + 1),
+                          params[i].c_str(),
+                          -1,
+                          SQLITE_TRANSIENT);  // copy string to sqlite and prevent sql injection
     }
 }
 

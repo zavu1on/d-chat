@@ -55,6 +55,22 @@ What is implemented (high level)
 Planned / next tasks
 - Enhance consensus and fork handling: stronger validation, reorg handling, conflict resolution, partial restoration of the blockchain.
 - Make the server multithreaded: handle multiple clients in parallel, provide thread-safe access to the blockchain.
+- Use RVO/NRVO approach to return objects from functions.
+```cpp
+// ❌ C-style: current implementation
+void createBlock(Block& block)
+{
+    block.hash = "...";
+}
+
+// ✅ C++17: return by value
+Block createBlock()
+{
+    Block block;
+    block.hash = "...";
+    return block;  // object is not recreated (Named Return Value Optimization)
+}
+```
 - Add a lightweight GUI.
 
 **Build & run (Windows) — detailed, machine-independent instructions**

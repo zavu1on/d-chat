@@ -94,7 +94,7 @@ bool ChainDB::findBlockIndexByHash(const std::string& hash, u_int& index)
 }
 
 void ChainDB::getBlocksByIndexRange(u_int start,
-                                    unsigned int count,
+                                    u_int count,
                                     const std::string& lastHash,
                                     std::vector<Block>& outBlocks)
 {
