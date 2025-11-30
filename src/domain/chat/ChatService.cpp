@@ -109,18 +109,21 @@ void ChatService::handleIncomingTextMessage(const message::TextMessage& message,
 {
     peer::UserPeer from = message.getFrom();
     peer::UserPeer to = message.getTo();
+    uint64_t timestamp = message.getTimestamp();
     const message::TextMessagePayload& payload = message.getPayload();
 
     messageService->insertSecretMessage(message, messageDump, message.getBlockHash());
     peerService->addChatPeer(from);
 
+    std::string formattedTime = utils::timestampToString(timestamp);
     consoleUI->printLog("[SERVER] received message from " + from.host + ":" +
-                        std::to_string(from.port) + ": " + payload.message + "\n");
+                        std::to_string(from.port) + " [" + formattedTime + "]: " + payload.message +
+                        "\n");
 
     peer::UserPeer me{ to.host, to.port, config->get(config::ConfigField::PUBLIC_KEY) };
-    uint64_t timestamp = utils::getTimestamp();
+    uint64_t responseTimestamp = utils::getTimestamp();
 
-    message::TextMessageResponse responseMessage(utils::uuidv4(), me, from, timestamp);
+    message::TextMessageResponse responseMessage(utils::uuidv4(), me, from, responseTimestamp);
 
     json jData;
     responseMessage.serialize(jData);

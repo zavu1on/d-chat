@@ -174,7 +174,7 @@ void ConsoleUI::navigateHistoryDown(std::string& input)
 
 void ConsoleUI::handleKeyPress(char ch, std::string& input)
 {
-    if (ch == '\b' || ch == 127)
+    if (ch == '\b' || ch == 127)  // backspace
     {
         if (!input.empty() && cursorPosition > 0)
         {
@@ -186,7 +186,7 @@ void ConsoleUI::handleKeyPress(char ch, std::string& input)
             redrawInputLine(input);
         }
     }
-    else if (ch >= 32 && ch <= 126)
+    else if (ch >= 32 && ch <= 126)  // ASCII
     {
         input.insert(cursorPosition, 1, ch);
         cursorPosition++;
@@ -201,19 +201,19 @@ void ConsoleUI::handleExtendedKey(int extendedCode, std::string& input)
 {
     switch (extendedCode)
     {
-        case 72:
+        case 72:  // arrow up
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             navigateHistoryUp(input);
             break;
         }
-        case 80:
+        case 80:  // arrow down
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             navigateHistoryDown(input);
             break;
         }
-        case 75:
+        case 75:  // arrow left
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             if (cursorPosition > 0)
@@ -223,7 +223,7 @@ void ConsoleUI::handleExtendedKey(int extendedCode, std::string& input)
             }
             break;
         }
-        case 77:
+        case 77:  // arrow right
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             if (cursorPosition < input.length())
@@ -233,21 +233,21 @@ void ConsoleUI::handleExtendedKey(int extendedCode, std::string& input)
             }
             break;
         }
-        case 71:
+        case 71:  // home
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             cursorPosition = 0;
             setCursorPosition(cursorPosition);
             break;
         }
-        case 79:
+        case 79:  // end
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             cursorPosition = input.length();
             setCursorPosition(cursorPosition);
             break;
         }
-        case 83:
+        case 83:  // delete
         {
             std::lock_guard<std::mutex> lock(consoleMutex);
             if (cursorPosition < input.length())

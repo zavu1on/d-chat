@@ -233,13 +233,14 @@ void ChatApplication::handleChatCommand(const std::string& args)
         }
         output += "\n";
 
-        for (const auto& msg : messages)
+        for (const auto& message : messages)
         {
-            std::string sender = (msg.getFrom().publicKey == myPublicKey) ? "YOU" : "PEER";
-            std::string timestamp = std::to_string(msg.getTimestamp());
-            std::string status = invalidSet.count(msg.getId()) ? " [INVALID]" : "";
-            output += "[" + timestamp.substr(timestamp.size() - 6) + "] " + sender + ": " +
-                      msg.getPayload().message + status + "\n";
+            std::string sender = (message.getFrom().publicKey == myPublicKey) ? "YOU" : "PEER";
+            std::string formattedTime = utils::timestampToString(message.getTimestamp());
+            std::string status = invalidSet.count(message.getId()) ? " [INVALID]" : "";
+
+            output += "[" + formattedTime + "] " + sender + ": " + message.getPayload().message +
+                      status + "\n";
         }
 
         consoleUI->printLog(output);
@@ -261,7 +262,7 @@ void ChatApplication::handleHelpCommand()
         "  /peers                  - Show list of online peers\n"
         "  /chats                  - Show all your chat conversations\n"
         "  /chat <host:port>       - View chat history with specific peer\n"
-        "  /send <host:port> <msg> - Send a message to a specific peer\n\n"
+        "  /send <host:port> <message> - Send a message to a specific peer\n\n"
         "Examples:\n"
         "  /chat 127.0.0.1:8001\n"
         "  /send 127.0.0.1:8001 Hello, how are you?\n";

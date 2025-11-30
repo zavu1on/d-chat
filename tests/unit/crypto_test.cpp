@@ -3,7 +3,6 @@
 #include "OpenSSLCrypto.hpp"
 #include "XORCrypto.hpp"
 
-
 class CryptoTest : public ::testing::Test
 {
 protected:
@@ -53,7 +52,7 @@ TEST_F(CryptoTest, EncryptDecryptRoundTrip)
     crypto::Bytes key = crypto->generateSecret(32);
 
     auto encrypted = crypto->encrypt(message, key);
-    EXPECT_NE(encrypted, message);  // Ciphertext differs from plaintext
+    EXPECT_NE(encrypted, message);
 
     auto decrypted = crypto->decrypt(encrypted, key);
     EXPECT_EQ(decrypted, message);

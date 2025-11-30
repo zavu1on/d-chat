@@ -9,7 +9,6 @@
 #include "timestamp.hpp"
 #include "uuid.hpp"
 
-
 TEST(UtilsTest, UUIDv4GeneratesUniqueIDs)
 {
     std::set<std::string> uuids;
@@ -113,4 +112,12 @@ TEST(UtilsTest, HexConversionUpperAndLowerCase)
 
     std::vector<uint8_t> recovered2 = utils::fromHex("ABCD");
     EXPECT_EQ(recovered2, data);
+}
+
+TEST(UtilsTest, TimestampToString)
+{
+    uint64_t timestamp = 1577836800000;  // 3 hours after Jan 1, 2020 in ms GMT+3
+    std::string expected = "2020-01-01 03:00:00";
+    std::string actual = utils::timestampToString(timestamp);
+    EXPECT_EQ(actual, expected);
 }
