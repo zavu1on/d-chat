@@ -19,7 +19,7 @@ namespace ui
 class ConsoleUI
 {
 private:
-    std::mutex consoleMutex;
+    std::mutex mutex;
     std::thread inputThread;
     std::atomic<bool> running;
     std::string currentInput;
@@ -50,6 +50,9 @@ private:
 public:
     using InputHandler = std::function<void(const std::string&)>;
 
+    static ConsoleUI* instance;
+    static BOOL WINAPI consoleCtrlHandler(DWORD ctrlType);
+
     ConsoleUI();
     ~ConsoleUI();
 
@@ -57,13 +60,6 @@ public:
     void printLog(const std::string& msg);
     void stop();
     void setCurrentInput(const std::string& s);
-
-    // Установка колбэка для корректного завершения приложения
     void setShutdownCallback(std::function<void()> callback);
-
-    // Статический обработчик для Windows Console Control Events
-    static BOOL WINAPI consoleCtrlHandler(DWORD ctrlType);
-    static ConsoleUI* instance;
 };
-
 }  // namespace ui

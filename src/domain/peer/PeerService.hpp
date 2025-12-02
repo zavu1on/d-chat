@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <shared_mutex>
+#include <mutex>
 #include <vector>
 
 #include "IPeerRepo.hpp"
@@ -14,7 +14,7 @@ class PeerService
 private:
     std::vector<UserHost> hosts;
     std::vector<UserPeer> peers;
-    mutable std::shared_mutex mutex;  // allows call from const methods
+    mutable std::mutex mutex;  // allows call from const methods
     std::shared_ptr<peer::IPeerRepo> peerRepo;
 
 public:

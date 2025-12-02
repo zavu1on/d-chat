@@ -71,6 +71,7 @@ Block createBlock()
     return block;  // object is not recreated (Named Return Value Optimization)
 }
 ```
+- Change mutex to `shared_lock` and `unique_lock` for better performance.
 - Add a lightweight GUI.
 
 **Build & run (Windows) — detailed, machine-independent instructions**

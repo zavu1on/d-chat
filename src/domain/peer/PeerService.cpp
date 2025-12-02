@@ -27,25 +27,25 @@ const std::vector<UserHost>& PeerService::getHosts() const { return hosts; }
 
 std::vector<UserPeer> PeerService::getPeers() const
 {
-    std::shared_lock lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     return peers;
 }
 
 int PeerService::getPeersCount() const
 {
-    std::shared_lock lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     return peers.size();
 }
 
 UserPeer PeerService::getPeer(size_t index) const
 {
-    std::shared_lock lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     return peers.at(index);
 }
 
 UserPeer PeerService::findPeer(const UserHost& host) const
 {
-    std::shared_lock lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     auto it = std::find_if(peers.begin(),
                            peers.end(),
                            [&host](const UserPeer& peer)
@@ -59,14 +59,15 @@ UserPeer PeerService::findPeer(const UserHost& host) const
 
 void PeerService::addPeer(const UserPeer& peer)
 {
-    std::unique_lock lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
     auto it = std::find(peers.begin(), peers.end(), peer);
     if (it == peers.end()) peers.push_back(peer);
 }
 
 void PeerService::removePeer(const UserPeer& peer)
 {
-    std::unique_lock lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex);
+
     auto it = std::find(peers.begin(), peers.end(), peer);
     if (it != peers.end()) peers.erase(it);
 }

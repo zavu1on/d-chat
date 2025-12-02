@@ -182,7 +182,7 @@ void ConsoleUI::handleKeyPress(char ch, std::string& input)
             cursorPosition--;
             currentInput = input;
 
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             redrawInputLine(input);
         }
     }
@@ -192,7 +192,7 @@ void ConsoleUI::handleKeyPress(char ch, std::string& input)
         cursorPosition++;
         currentInput = input;
 
-        std::lock_guard<std::mutex> lock(consoleMutex);
+        std::lock_guard<std::mutex> lock(mutex);
         redrawInputLine(input);
     }
 }
@@ -203,19 +203,19 @@ void ConsoleUI::handleExtendedKey(int extendedCode, std::string& input)
     {
         case 72:  // arrow up
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             navigateHistoryUp(input);
             break;
         }
         case 80:  // arrow down
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             navigateHistoryDown(input);
             break;
         }
         case 75:  // arrow left
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             if (cursorPosition > 0)
             {
                 cursorPosition--;
@@ -225,7 +225,7 @@ void ConsoleUI::handleExtendedKey(int extendedCode, std::string& input)
         }
         case 77:  // arrow right
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             if (cursorPosition < input.length())
             {
                 cursorPosition++;
@@ -235,21 +235,21 @@ void ConsoleUI::handleExtendedKey(int extendedCode, std::string& input)
         }
         case 71:  // home
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             cursorPosition = 0;
             setCursorPosition(cursorPosition);
             break;
         }
         case 79:  // end
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             cursorPosition = input.length();
             setCursorPosition(cursorPosition);
             break;
         }
         case 83:  // delete
         {
-            std::lock_guard<std::mutex> lock(consoleMutex);
+            std::lock_guard<std::mutex> lock(mutex);
             if (cursorPosition < input.length())
             {
                 input.erase(cursorPosition, 1);
@@ -275,7 +275,7 @@ void ConsoleUI::startInputLoop(InputHandler handler)
             historyIndex = commandHistory.size();
 
             {
-                std::lock_guard<std::mutex> lock(consoleMutex);
+                std::lock_guard<std::mutex> lock(mutex);
                 std::cout << "> " << std::flush;
             }
 
@@ -288,7 +288,7 @@ void ConsoleUI::startInputLoop(InputHandler handler)
                     if (ch == '\r' || ch == '\n')
                     {
                         {
-                            std::lock_guard<std::mutex> lock(consoleMutex);
+                            std::lock_guard<std::mutex> lock(mutex);
                             std::cout << std::endl;
                         }
 
@@ -308,7 +308,7 @@ void ConsoleUI::startInputLoop(InputHandler handler)
 
                         if (running.load(std::memory_order_acquire))
                         {
-                            std::lock_guard<std::mutex> lock(consoleMutex);
+                            std::lock_guard<std::mutex> lock(mutex);
                             std::cout << "> " << std::flush;
                             cursorPosition = 0;
                         }
@@ -336,7 +336,7 @@ void ConsoleUI::startInputLoop(InputHandler handler)
 
 void ConsoleUI::printLog(const std::string& msg)
 {
-    std::lock_guard<std::mutex> lock(consoleMutex);
+    std::lock_guard<std::mutex> lock(mutex);
 
     clearInputLine();
 
@@ -371,7 +371,7 @@ void ConsoleUI::stop()
 
 void ConsoleUI::setCurrentInput(const std::string& s)
 {
-    std::lock_guard<std::mutex> lock(consoleMutex);
+    std::lock_guard<std::mutex> lock(mutex);
     currentInput = s;
 }
 }  // namespace ui
