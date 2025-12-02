@@ -68,7 +68,7 @@ protected:
             std::make_shared<blockchain::BlockchainService>(config, crypto, chainRepo, consoleUI);
 
         messageService = std::make_shared<message::MessageService>(
-            messageRepo, chainRepo, blockchainService, config, crypto, consoleUI);
+            messageRepo, blockchainService, config, crypto, consoleUI);
 
         chatService = std::make_shared<chat::ChatService>(
             config, crypto, peerService, blockchainService, messageService, consoleUI);

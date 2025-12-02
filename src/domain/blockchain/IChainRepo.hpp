@@ -20,7 +20,6 @@ public:
 
     virtual bool insertBlock(const Block& block) = 0;
     virtual bool findBlockByHash(const std::string& hash, Block& block) = 0;
-    virtual bool findBlockIndexByHash(const std::string& hash, u_int& index) = 0;
     virtual void getBlocksByIndexRange(u_int start,
                                        u_int count,
                                        const std::string& lastHash,

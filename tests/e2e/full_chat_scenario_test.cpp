@@ -14,7 +14,6 @@
 #include "timestamp.hpp"
 #include "uuid.hpp"
 
-
 class FullChatScenarioTest : public ::testing::Test
 {
 protected:
@@ -95,12 +94,8 @@ protected:
         setup->blockchainService = std::make_shared<blockchain::BlockchainService>(
             setup->config, crypto, setup->chainRepo, setup->consoleUI);
 
-        setup->messageService = std::make_shared<message::MessageService>(setup->messageRepo,
-                                                                          setup->chainRepo,
-                                                                          setup->blockchainService,
-                                                                          setup->config,
-                                                                          crypto,
-                                                                          setup->consoleUI);
+        setup->messageService = std::make_shared<message::MessageService>(
+            setup->messageRepo, setup->blockchainService, setup->config, crypto, setup->consoleUI);
 
         setup->chatService = std::make_shared<chat::ChatService>(setup->config,
                                                                  crypto,

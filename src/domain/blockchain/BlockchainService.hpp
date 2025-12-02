@@ -60,5 +60,6 @@ public:
                                u_int count,
                                const std::string& lastHash,
                                std::vector<Block>& outBlocks);
+    bool findBlockByHash(const std::string& hash, Block& block);
 };
 }  // namespace blockchain

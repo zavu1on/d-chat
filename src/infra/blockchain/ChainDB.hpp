@@ -28,7 +28,6 @@ public:
 
     bool insertBlock(const Block& block) override;
     bool findBlockByHash(const std::string& hash, Block& block) override;
-    bool findBlockIndexByHash(const std::string& hash, u_int& index) override;
     void getBlocksByIndexRange(u_int start,
                                u_int count,
                                const std::string& lastHash,

@@ -6,13 +6,11 @@ namespace message
 {
 MessageService::MessageService(
     const std::shared_ptr<IMessageRepo>& messageRepo,
-    const std::shared_ptr<blockchain::IChainRepo>& chainRepo,
     const std::shared_ptr<blockchain::BlockchainService>& blockchainService,
     const std::shared_ptr<config::IConfig>& config,
     const std::shared_ptr<crypto::ICrypto>& crypto,
     const std::shared_ptr<ui::ConsoleUI>& consoleUI)
     : messageRepo(messageRepo),
-      chainRepo(chainRepo),
       blockchainService(blockchainService),
       config(config),
       crypto(crypto),
@@ -47,7 +45,7 @@ void MessageService::findInvalidChatMessageIDs(const std::vector<TextMessage>& m
         }
 
         blockchain::Block block;
-        if (!chainRepo->findBlockByHash(blockHash, block))
+        if (!blockchainService->findBlockByHash(blockHash, block))
         {
             invalidIds.push_back(message.getId());
             continue;

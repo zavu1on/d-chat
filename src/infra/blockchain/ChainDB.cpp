@@ -76,23 +76,6 @@ bool ChainDB::findBlockByHash(const std::string& hash, Block& block)
     return found;
 }
 
-bool ChainDB::findBlockIndexByHash(const std::string& hash, u_int& index)
-{
-    std::lock_guard<std::mutex> lock(mutex);
-    bool found = false;
-
-    db->selectPrepared("SELECT id FROM blocks WHERE hash=? LIMIT 1;",
-                       { hash },
-                       [&](const std::vector<std::string>& row)
-                       {
-                           if (row.empty()) return;
-                           index = std::stoull(row[0]);
-                           found = true;
-                       });
-
-    return found;
-}
-
 void ChainDB::getBlocksByIndexRange(u_int start,
                                     u_int count,
                                     const std::string& lastHash,

@@ -67,7 +67,6 @@ void PeerService::addPeer(const UserPeer& peer)
 void PeerService::removePeer(const UserPeer& peer)
 {
     std::lock_guard<std::mutex> lock(mutex);
-
     auto it = std::find(peers.begin(), peers.end(), peer);
     if (it != peers.end()) peers.erase(it);
 }

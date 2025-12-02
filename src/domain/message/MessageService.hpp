@@ -16,7 +16,6 @@ class MessageService
 {
 private:
     std::shared_ptr<IMessageRepo> messageRepo;
-    std::shared_ptr<blockchain::IChainRepo> chainRepo;
     std::shared_ptr<blockchain::BlockchainService> blockchainService;
     std::shared_ptr<config::IConfig> config;
     std::shared_ptr<crypto::ICrypto> crypto;
@@ -24,7 +23,6 @@ private:
 
 public:
     MessageService(const std::shared_ptr<IMessageRepo>& messageRepo,
-                   const std::shared_ptr<blockchain::IChainRepo>& chainRepo,
                    const std::shared_ptr<blockchain::BlockchainService>& blockchainService,
                    const std::shared_ptr<config::IConfig>& config,
                    const std::shared_ptr<crypto::ICrypto>& crypto,

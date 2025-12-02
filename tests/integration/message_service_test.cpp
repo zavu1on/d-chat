@@ -55,7 +55,7 @@ protected:
             std::make_shared<blockchain::BlockchainService>(config, crypto, chainRepo, consoleUI);
 
         messageService = std::make_shared<message::MessageService>(
-            messageRepo, chainRepo, blockchainService, config, crypto, consoleUI);
+            messageRepo, blockchainService, config, crypto, consoleUI);
     }
 
     void TearDown() override
