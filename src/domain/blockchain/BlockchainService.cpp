@@ -349,5 +349,4 @@ bool BlockchainService::findBlockByHash(const std::string& hash, Block& block)
 {
     return chainRepo->findBlockByHash(hash, block);
 }
-
 }  // namespace blockchain

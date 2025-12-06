@@ -34,32 +34,50 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
                                  const std::string& peerBPublicKey,
                                  std::vector<TextMessage>& messages)
 {
+    bool error = false;
+
     db->selectPrepared(
         "SELECT message_json "
         "FROM messages WHERE to_public_key=? AND from_public_key=?;",
         { peerAPublicKey, peerBPublicKey },
-        [&messages, this](const std::vector<std::string>& row)
+        [&messages, &error, this](const std::vector<std::string>& row)
         {
             if (row.size() < 1) return;
             json jData = json::parse(row[0]);
-            messages.emplace_back(jData, config->get(config::ConfigField::PRIVATE_KEY), crypto);
+            try
+            {
+                messages.emplace_back(jData, config->get(config::ConfigField::PRIVATE_KEY), crypto);
+            }
+            catch (const std::exception&)
+            {
+                error = true;
+            }
         });
     db->selectPrepared(
         "SELECT message_json "
         "FROM messages WHERE to_public_key=? AND from_public_key=?;",
         { peerBPublicKey, peerAPublicKey },
-        [&messages, this](const std::vector<std::string>& row)
+        [&messages, &error, this](const std::vector<std::string>& row)
         {
             if (row.size() < 1) return;
             json jData = json::parse(row[0]);
-            messages.emplace_back(
-                jData, config->get(config::ConfigField::PRIVATE_KEY), crypto, true);
+            try
+            {
+                messages.emplace_back(
+                    jData, config->get(config::ConfigField::PRIVATE_KEY), crypto, true);
+            }
+            catch (const std::exception&)
+            {
+                error = true;
+            }
         });
 
     std::sort(messages.begin(),
               messages.end(),
               [](const TextMessage& a, const TextMessage& b)
               { return a.getTimestamp() < b.getTimestamp(); });
+
+    if (error) throw std::exception();
 }
 
 bool MessageDB::findBlockHashByMessageId(const std::string& messageId, std::string& blockHash)

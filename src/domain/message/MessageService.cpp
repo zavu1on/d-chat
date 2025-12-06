@@ -28,7 +28,7 @@ void MessageService::findChatMessages(const std::string& peerAPublicKey,
     }
     catch (const std::exception&)
     {
-        consoleUI->printLog("[ERROR] Failed to find chat messages. Blockchain was invalid\n");
+        consoleUI->printLog("[ERROR] Failed to find some chat messages. Blockchain was invalid\n");
     }
 }
 
@@ -38,7 +38,8 @@ void MessageService::findInvalidChatMessageIDs(const std::vector<TextMessage>& m
     for (const auto& message : messages)
     {
         std::string blockHash;
-        if (!messageRepo->findBlockHashByMessageId(message.getId(), blockHash) || blockHash.empty())
+        if (!messageRepo->findBlockHashByMessageId(message.getId(), blockHash) ||
+            blockHash.empty() || blockHash != message.getBlockHash())
         {
             invalidIds.push_back(message.getId());
             continue;
@@ -50,6 +51,7 @@ void MessageService::findInvalidChatMessageIDs(const std::vector<TextMessage>& m
             invalidIds.push_back(message.getId());
             continue;
         }
+        std::cout << "Block hash: " << blockHash << " " << block.hash << std::endl;
 
         std::string error;
         if (!blockchainService->compareBlockWithMessage(block, message, error))
