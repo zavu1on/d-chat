@@ -116,6 +116,7 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
         return ok;
     };
 
+    // может поменять местами отправку блоков и сообщения
     bool stored = blockchainService->storeAndBroadcastBlock(block, peers, sendCallback);
     if (stored)
     {

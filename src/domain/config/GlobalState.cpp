@@ -2,14 +2,11 @@
 
 namespace config
 {
+GlobalState GlobalState::instance;
 
 GlobalState::GlobalState() : peersToReceive(0) {}
 
-GlobalState& GlobalState::getInstance()
-{
-    static GlobalState instance;
-    return instance;
-}
+GlobalState& GlobalState::getInstance() { return instance; }
 
 unsigned int GlobalState::getPeersToReceive() const
 {

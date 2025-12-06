@@ -1,6 +1,5 @@
 #pragma once
 
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -18,7 +17,6 @@ private:
     std::shared_ptr<db::DBFile> db;
     std::shared_ptr<config::IConfig> config;
     std::shared_ptr<crypto::ICrypto> crypto;
-    std::mutex mutex;
 
 public:
     MessageDB(const std::shared_ptr<db::DBFile>& db,

@@ -12,7 +12,6 @@ MessageDB::MessageDB(const std::shared_ptr<db::DBFile>& db,
 
 void MessageDB::init()
 {
-    std::lock_guard<std::mutex> lock(mutex);
     db->open();
 
     db->exec(R"(
@@ -35,13 +34,11 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
                                  const std::string& peerBPublicKey,
                                  std::vector<TextMessage>& messages)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     db->selectPrepared(
         "SELECT message_json "
         "FROM messages WHERE to_public_key=? AND from_public_key=?;",
         { peerAPublicKey, peerBPublicKey },
-        [&](const std::vector<std::string>& row)
+        [&messages, this](const std::vector<std::string>& row)
         {
             if (row.size() < 1) return;
             json jData = json::parse(row[0]);
@@ -51,7 +48,7 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
         "SELECT message_json "
         "FROM messages WHERE to_public_key=? AND from_public_key=?;",
         { peerBPublicKey, peerAPublicKey },
-        [&](const std::vector<std::string>& row)
+        [&messages, this](const std::vector<std::string>& row)
         {
             if (row.size() < 1) return;
             json jData = json::parse(row[0]);
@@ -67,12 +64,11 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
 
 bool MessageDB::findBlockHashByMessageId(const std::string& messageId, std::string& blockHash)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     bool found = false;
 
     db->selectPrepared("SELECT block_hash FROM messages WHERE message_id=? LIMIT 1;",
                        { messageId },
-                       [&](const std::vector<std::string>& row)
+                       [&blockHash, &found](const std::vector<std::string>& row)
                        {
                            if (!row.empty())
                            {
@@ -88,8 +84,6 @@ bool MessageDB::insertSecretMessage(const TextMessage& message,
                                     const std::string& messageDump,
                                     const std::string& blockHash)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     return db->executePrepared(
         "INSERT INTO messages(message_id, to_public_key, from_public_key, timestamp, message_json, "
         "block_hash) "
@@ -104,8 +98,6 @@ bool MessageDB::insertSecretMessage(const TextMessage& message,
 
 bool MessageDB::removeMessageByBlockHash(const std::string& blockHash)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     return db->executePrepared("DELETE FROM messages WHERE block_hash=?;", { blockHash });
 }
-
 }  // namespace message

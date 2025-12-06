@@ -2,12 +2,13 @@
 
 #include <mutex>
 
-// todo modify singleton
 namespace config
 {
 class GlobalState
 {
 private:
+    static GlobalState instance;
+
     unsigned int peersToReceive;
     unsigned int missingBlocksCount;
     mutable std::mutex mutex;

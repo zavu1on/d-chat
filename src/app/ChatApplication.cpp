@@ -305,7 +305,9 @@ void ChatApplication::init()
     std::vector<std::string> peerList;
     config->loadTrustedPeerList(peerList);
     if (peerList.empty())
-        consoleUI->printLog("[WARN] No trusted peers found in config. Can not connect to anyone\n");
+        consoleUI->printLog(
+            "[WARN] No trusted peers found in config. Can not connect to anyone. You will not be "
+            "able to send messages (except peers that have connected to you).\n");
 
     db = std::make_shared<db::DBFile>(DB_PATH);
     chainRepo = std::make_shared<blockchain::ChainDB>(db, config, crypto);

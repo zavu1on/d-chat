@@ -118,6 +118,7 @@ bool BlockchainService::storeAndBroadcastBlock(
         {
             consoleUI->printLog(
                 "[BLOCKCHAIN] error sending block to peer: " + std::string(error.what()) + "\n");
+            // todo вот тут надо вернуть false если получился форк
         }
     }
 
@@ -139,7 +140,7 @@ void BlockchainService::onIncomingBlock(const json& jData, std::string& response
                 config->get(config::ConfigField::PUBLIC_KEY));
 
             message::BlockchainErrorMessageResponse errorResponse(
-                utils::uuidv4(), {}, utils::getTimestamp(), error, block);
+                utils::uuidv4(), me, utils::getTimestamp(), error, block);
 
             json jData;
             errorResponse.serialize(jData);

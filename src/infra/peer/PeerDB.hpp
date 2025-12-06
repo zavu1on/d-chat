@@ -1,6 +1,5 @@
 #pragma once
 
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -13,7 +12,6 @@ class PeerDB : public IPeerRepo
 {
 private:
     std::shared_ptr<db::DBFile> db;
-    std::mutex mutex;
 
 public:
     PeerDB(const std::shared_ptr<db::DBFile>& db);

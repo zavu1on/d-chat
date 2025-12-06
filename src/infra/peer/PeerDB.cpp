@@ -6,7 +6,6 @@ PeerDB::PeerDB(const std::shared_ptr<db::DBFile>& db) : db(db) {}
 
 void PeerDB::init()
 {
-    std::lock_guard<std::mutex> lock(mutex);
     db->open();
 
     db->exec(R"(
@@ -24,10 +23,8 @@ void PeerDB::init()
 
 void PeerDB::getAllPeers(std::vector<UserPeer>& peers)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     db->select("SELECT host, port, public_key FROM peers;",
-               [&](const std::vector<std::string>& row)
+               [&peers](const std::vector<std::string>& row)
                {
                    if (row.size() == 3) peers.emplace_back(row[0], std::stoi(row[1]), row[2]);
                });
@@ -35,12 +32,10 @@ void PeerDB::getAllPeers(std::vector<UserPeer>& peers)
 
 void PeerDB::addPeer(const UserPeer& peer)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     bool found = false;
     db->selectPrepared("SELECT id FROM peers WHERE public_key=? LIMIT 1;",
                        { peer.publicKey },
-                       [&](const std::vector<std::string>& row)
+                       [&found](const std::vector<std::string>& row)
                        {
                            if (!row.empty()) found = true;
                        });
@@ -54,11 +49,9 @@ void PeerDB::addPeer(const UserPeer& peer)
 
 bool PeerDB::findPublicKeyByUserHost(const UserHost& host, std::string& publicKey)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     db->selectPrepared("SELECT public_key FROM peers WHERE host=? AND port=? LIMIT 1;",
                        { host.host, std::to_string(host.port) },
-                       [&](const std::vector<std::string>& row)
+                       [&publicKey](const std::vector<std::string>& row)
                        {
                            if (!row.empty()) publicKey = row[0];
                        });

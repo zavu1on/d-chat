@@ -15,7 +15,6 @@ ChainDB::ChainDB(const std::shared_ptr<db::DBFile>& db,
 
 void ChainDB::init()
 {
-    std::lock_guard<std::mutex> lock(mutex);
     db->open();
 
     db->exec(R"(
@@ -36,8 +35,6 @@ void ChainDB::init()
 
 bool ChainDB::insertBlock(const Block& block)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     return db->executePrepared(
         "INSERT INTO blocks(hash, previous_hash, payload_hash, author_public_key, signature, "
         "timestamp)"
@@ -54,14 +51,13 @@ bool ChainDB::insertBlock(const Block& block)
 
 bool ChainDB::findBlockByHash(const std::string& hash, Block& block)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     bool found = false;
 
     db->selectPrepared(
         "SELECT hash, previous_hash, payload_hash, author_public_key, signature, timestamp "
         "FROM blocks WHERE hash=? LIMIT 1;",
         { hash },
-        [&](const std::vector<std::string>& row)
+        [&block, &found](const std::vector<std::string>& row)
         {
             if (row.size() < 6) return;
             block.hash = row[0];
@@ -81,15 +77,13 @@ void ChainDB::getBlocksByIndexRange(u_int start,
                                     const std::string& lastHash,
                                     std::vector<Block>& outBlocks)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     if (lastHash == "0")
     {
         db->selectPrepared(
             "SELECT hash, previous_hash, payload_hash, author_public_key, signature, timestamp "
             "FROM blocks ORDER BY id ASC LIMIT ? OFFSET ?;",
             { std::to_string(count), std::to_string(start) },
-            [&](const std::vector<std::string>& row)
+            [&outBlocks](const std::vector<std::string>& row)
             {
                 if (row.size() < 6) return;
                 outBlocks.emplace_back(row[0], row[1], row[2], row[3], row[4], std::stoull(row[5]));
@@ -102,7 +96,7 @@ void ChainDB::getBlocksByIndexRange(u_int start,
 
         db->selectPrepared("SELECT id FROM blocks WHERE hash=? LIMIT 1;",
                            { lastHash },
-                           [&](const std::vector<std::string>& row)
+                           [&lastBlockIndex, &found](const std::vector<std::string>& row)
                            {
                                if (!row.empty())
                                {
@@ -119,7 +113,7 @@ void ChainDB::getBlocksByIndexRange(u_int start,
             "SELECT hash, previous_hash, payload_hash, author_public_key, signature, timestamp "
             "FROM blocks WHERE id >= ? ORDER BY id ASC LIMIT ?;",
             { std::to_string(startIndex), std::to_string(count) },
-            [&](const std::vector<std::string>& row)
+            [&outBlocks](const std::vector<std::string>& row)
             {
                 if (row.size() < 6) return;
                 outBlocks.emplace_back(row[0], row[1], row[2], row[3], row[4], std::stoull(row[5]));
@@ -129,13 +123,11 @@ void ChainDB::getBlocksByIndexRange(u_int start,
 
 u_int ChainDB::countBlocksAfterHash(const std::string& hash)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     if (hash == "0")
     {
         u_int count = 0;
         db->select("SELECT COUNT(*) FROM blocks;",
-                   [&](const std::vector<std::string>& row)
+                   [&count](const std::vector<std::string>& row)
                    {
                        if (!row.empty()) count = std::stoull(row[0]);
                    });
@@ -147,7 +139,7 @@ u_int ChainDB::countBlocksAfterHash(const std::string& hash)
 
     db->selectPrepared("SELECT id FROM blocks WHERE hash=? LIMIT 1;",
                        { hash },
-                       [&](const std::vector<std::string>& row)
+                       [&index, &exists](const std::vector<std::string>& row)
                        {
                            if (row.empty()) return;
                            index = std::stoull(row[0]);
@@ -158,7 +150,7 @@ u_int ChainDB::countBlocksAfterHash(const std::string& hash)
     {
         u_int count = 0;
         db->select("SELECT COUNT(*) FROM blocks;",
-                   [&](const std::vector<std::string>& row)
+                   [&count](const std::vector<std::string>& row)
                    {
                        if (!row.empty()) count = std::stoull(row[0]);
                    });
@@ -168,7 +160,7 @@ u_int ChainDB::countBlocksAfterHash(const std::string& hash)
     u_int missing = 0;
     db->selectPrepared("SELECT COUNT(*) FROM blocks WHERE id > ?;",
                        { std::to_string(index) },
-                       [&](const std::vector<std::string>& row)
+                       [&missing](const std::vector<std::string>& row)
                        {
                            if (!row.empty()) missing = std::stoull(row[0]);
                        });
@@ -178,13 +170,12 @@ u_int ChainDB::countBlocksAfterHash(const std::string& hash)
 
 bool ChainDB::findTip(Block& block)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     bool found = false;
 
     db->select(
         "SELECT hash, previous_hash, payload_hash, author_public_key, signature, timestamp "
         "FROM blocks ORDER BY id DESC LIMIT 1;",
-        [&](const std::vector<std::string>& row)
+        [&block, &found](const std::vector<std::string>& row)
         {
             if (row.size() < 6) return;
             block.hash = row[0];
@@ -201,11 +192,10 @@ bool ChainDB::findTip(Block& block)
 
 bool ChainDB::findTipIndex(u_int& index)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     bool found = false;
 
     db->select("SELECT id FROM blocks ORDER BY id DESC LIMIT 1;",
-               [&](const std::vector<std::string>& row)
+               [&index, &found](const std::vector<std::string>& row)
                {
                    if (row.empty()) return;
                    index = std::stoull(row[0]);
@@ -217,12 +207,11 @@ bool ChainDB::findTipIndex(u_int& index)
 
 bool ChainDB::hasBlock(const std::string& hash)
 {
-    std::lock_guard<std::mutex> lock(mutex);
     bool exists = false;
 
     db->selectPrepared("SELECT 1 FROM blocks WHERE hash=? LIMIT 1;",
                        { hash },
-                       [&](const std::vector<std::string>& row)
+                       [&exists](const std::vector<std::string>& row)
                        {
                            if (!row.empty()) exists = true;
                        });
@@ -232,12 +221,10 @@ bool ChainDB::hasBlock(const std::string& hash)
 
 void ChainDB::loadAllBlocks(std::vector<Block>& blocks)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
     db->select(
         "SELECT hash, previous_hash, payload_hash, author_public_key, signature, timestamp "
         "FROM blocks ORDER BY id ASC;",
-        [&](const std::vector<std::string>& row)
+        [&blocks](const std::vector<std::string>& row)
         {
             if (row.size() < 6) return;
             blocks.emplace_back(row[0], row[1], row[2], row[3], row[4], std::stoull(row[5]));
