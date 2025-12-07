@@ -34,7 +34,8 @@ public:
     TextMessage(const json& jData,
                 const std::string& privateKey,
                 const std::shared_ptr<crypto::ICrypto>& crypto,
-                bool invertFromTo = false);
+                bool invertFromTo = false,
+                bool createObjectIfError = false);
 
     void serialize(json& jData,
                    const std::string& privateKey,

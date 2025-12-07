@@ -37,7 +37,6 @@ void ChatService::handleIncomingErrorMessage(const json& jData,
     response = R"({"type":"ERROR_RESPONSE","error":"Invalid request"})";
 }
 
-// todo реализовать удаление сообщение при форке
 void ChatService::handleOutgoingBlockchainErrorMessage(
     const message::BlockchainErrorMessageResponse& response)
 {

@@ -46,7 +46,8 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
             json jData = json::parse(row[0]);
             try
             {
-                messages.emplace_back(jData, config->get(config::ConfigField::PRIVATE_KEY), crypto);
+                messages.emplace_back(
+                    jData, config->get(config::ConfigField::PRIVATE_KEY), crypto, false, true);
             }
             catch (const std::exception&)
             {
@@ -64,7 +65,7 @@ void MessageDB::findChatMessages(const std::string& peerAPublicKey,
             try
             {
                 messages.emplace_back(
-                    jData, config->get(config::ConfigField::PRIVATE_KEY), crypto, true);
+                    jData, config->get(config::ConfigField::PRIVATE_KEY), crypto, true, true);
             }
             catch (const std::exception&)
             {

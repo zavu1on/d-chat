@@ -51,7 +51,6 @@ void MessageService::findInvalidChatMessageIDs(const std::vector<TextMessage>& m
             invalidIds.push_back(message.getId());
             continue;
         }
-        std::cout << "Block hash: " << blockHash << " " << block.hash << std::endl;
 
         std::string error;
         if (!blockchainService->compareBlockWithMessage(block, message, error))

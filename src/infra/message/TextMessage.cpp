@@ -28,22 +28,31 @@ TextMessage::TextMessage(const std::string& id,
 TextMessage::TextMessage(const json& jData,
                          const std::string& privateKey,
                          const std::shared_ptr<crypto::ICrypto>& crypto,
-                         bool invertFromTo)
+                         bool invertFromTo,
+                         bool createObjectIfError)
     : SecretMessage(jData, crypto), payload{}
 {
-    if (type != MessageType::TEXT_MESSAGE) throw std::runtime_error("Invalid message type");
+    try
+    {
+        if (type != MessageType::TEXT_MESSAGE) throw std::runtime_error("Invalid message type");
 
-    std::string publicKey = invertFromTo ? to.publicKey : from.publicKey;
-    crypto::Bytes sessionKey = createSessionKey(privateKey, publicKey, crypto);
+        std::string publicKey = invertFromTo ? to.publicKey : from.publicKey;
+        crypto::Bytes sessionKey = createSessionKey(privateKey, publicKey, crypto);
 
-    crypto::Bytes cipher = crypto->stringToKey(jData["payload"]["message"].get<std::string>());
-    crypto::Bytes plain = crypto->decrypt(cipher, sessionKey);
-    crypto::Bytes publicKeyBytes = crypto->stringToKey(from.publicKey);
+        crypto::Bytes cipher = crypto->stringToKey(jData["payload"]["message"].get<std::string>());
+        crypto::Bytes plain = crypto->decrypt(cipher, sessionKey);
+        crypto::Bytes publicKeyBytes = crypto->stringToKey(from.publicKey);
 
-    if (!crypto->verify(plain, signature, publicKeyBytes))
-        throw std::runtime_error("Invalid signature");
+        if (!crypto->verify(plain, signature, publicKeyBytes))
+            throw std::runtime_error("Invalid signature");
 
-    payload.message = std::string(plain.begin(), plain.end());
+        payload.message = std::string(plain.begin(), plain.end());
+    }
+    catch (const std::exception& error)
+    {
+        if (!createObjectIfError) throw error;
+        payload.message = "CRASHED MESSAGE";
+    }
 }
 
 void TextMessage::serialize(json& jData,

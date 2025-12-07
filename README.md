@@ -72,6 +72,8 @@ Block createBlock()
 }
 ```
 - Change mutex to `shared_lock` and `unique_lock` for better performance.
+- Add two-way exchange of connected peers.
+- Add unicode support (add other languages).
 - Add a lightweight GUI.
 
 **Build & run (Windows) — detailed, machine-independent instructions**

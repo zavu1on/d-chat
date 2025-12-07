@@ -14,8 +14,6 @@ ConsoleUI::ConsoleUI()
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
     SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
 }
 
 ConsoleUI::~ConsoleUI()

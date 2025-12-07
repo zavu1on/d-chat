@@ -283,9 +283,6 @@ void ChatApplication::shutdown()
 
 void ChatApplication::init()
 {
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
-    setlocale(LC_ALL, "ru_RU.UTF-8");
     running.store(false, std::memory_order_relaxed);
 
     consoleUI = std::make_shared<ui::ConsoleUI>();

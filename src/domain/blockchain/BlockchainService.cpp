@@ -54,7 +54,7 @@ inline void BlockchainService::logValidationError(const std::string& context,
                                                   const std::string& blockHash)
 {
     consoleUI->printLog("[BLOCKCHAIN] " + context + " validation failed for block " + blockHash +
-                        ": " + error + "\n");
+                        ": " + error + "\n" + "Clear your blockchain database and try again.\n");
 }
 
 BlockchainService::BlockchainService(const std::shared_ptr<config::IConfig>& config,
@@ -118,7 +118,6 @@ bool BlockchainService::storeAndBroadcastBlock(
         {
             consoleUI->printLog(
                 "[BLOCKCHAIN] error sending block to peer: " + std::string(error.what()) + "\n");
-            // todo вот тут надо вернуть false если получился форк
         }
     }
 

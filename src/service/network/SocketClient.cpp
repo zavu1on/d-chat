@@ -1,5 +1,8 @@
 #include "SocketClient.hpp"
 
+#include "SocketServer.hpp"
+
+
 namespace network
 {
 void SocketClient::ensureInitialized()
@@ -98,7 +101,6 @@ std::string SocketClient::receiveMessage()
 {
     if (!connected) throw std::runtime_error("Not connected to server");
 
-    constexpr size_t BUFFER_SIZE = 4096;
     char buffer[BUFFER_SIZE];
     int bytes = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
 
