@@ -10,6 +10,9 @@ namespace network
 {
 class SocketClient
 {
+private:
+    void ensureInitialized();
+
 protected:
     WSADATA wsaData{};
     SOCKET clientSocket = INVALID_SOCKET;
@@ -35,8 +38,5 @@ public:
     bool isConnected() const;
 
     static u_short findFreePort();
-
-private:
-    void ensureInitialized();
 };
 }  // namespace network

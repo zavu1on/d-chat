@@ -12,7 +12,7 @@ d-chat is a lightweight, Windows-targeted decentralized chat application impleme
 **Design overview**
 - **Purpose**: Provide a decentralized chat where each message is stored and transferred inside blockchain-style blocks. The chain enables message integrity checks and basic replication between peers.
 - **Scope**: Peer discovery and management, sending/receiving text messages, storing messages and blocks in a local DB, simple block validation and block range synchronization.
-- **Platform**: Windows (console UTF-8 aware; `ChatApplication` sets console code page accordingly).
+- **Platform**: Windows (console user interface).
 
 **Key modules**
 - **chat**: Implements `chat::ChatService` — the protocol handler for incoming/outgoing JSON messages (text, connection, disconnection, peer lists, block ranges, errors). Responsible for routing messages between network layer and application services.
@@ -171,15 +171,15 @@ Notes & troubleshooting
 - For MSVC use the `:x64-windows` vcpkg triplet; for MinGW use `:x64-mingw-static` as shown above.
 - If CMake cannot find OpenSSL or other libs, ensure the `-DCMAKE_TOOLCHAIN_FILE` option points to the exact vcpkg toolchain file and that the requested triplet is installed.
 - The helper script `build_and_run.bat` included in the repo attempts to use MinGW at `C:\msys64\mingw64\bin` and the `x64-mingw-static` triplet. Edit the script if your MSYS2 is installed elsewhere.
+- You can download built executables for Windows-x64 from GitHub releases.
 
 Runtime
 - `d-chat_config.json` holds runtime settings (host, port, trusted peers). On first run a default config may be generated.
-- The produced executable is a console app and expects UTF-8 capable console (the app sets the console code page to UTF-8 at startup).
+- The produced executable is a console app.
 
 
 Notes
 - The app config file `d-chat_config.json` contains host/port and trusted peers. On first run a default config may be generated automatically.
-- The console expects UTF-8 output; `ChatApplication` sets the Windows console codepage to UTF-8 at startup.
 
 Academic note
 - This project was implemented as a coursework project at Peter the Great St. Petersburg Polytechnic University (SPbPU), Applied Computer Science.
