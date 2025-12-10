@@ -72,8 +72,7 @@ TEST_F(MessageServiceTest, InsertAndFindChatMessagesSucceeds)
     peer::UserPeer peer2(
         "127.0.0.1", test_helpers::TEST_PORT_PEER2, crypto->keyToString(keyPair2.publicKey));
 
-    message::TextMessage msg1(
-        utils::uuidv4(), peer1, peer2, utils::getTimestamp(), "Hello from peer1", "0");
+    message::TextMessage msg1 = message::TextMessage::create(peer1, peer2, "Hello from peer1");
 
     nlohmann::json jData1;
     msg1.serialize(jData1, crypto->keyToString(keyPair1.privateKey), crypto);
@@ -82,8 +81,7 @@ TEST_F(MessageServiceTest, InsertAndFindChatMessagesSucceeds)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    message::TextMessage msg2(
-        utils::uuidv4(), peer2, peer1, utils::getTimestamp(), "Reply from peer2", "0");
+    message::TextMessage msg2 = message::TextMessage::create(peer2, peer1, "Reply from peer2");
 
     nlohmann::json jData2;
     msg2.serialize(jData2, crypto->keyToString(keyPair2.privateKey), crypto);

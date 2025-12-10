@@ -145,8 +145,8 @@ TEST_F(FullChatScenarioTest, TwoPeersCommunicateSuccessfully)
     peer::UserPeer toPeer2(
         "127.0.0.1", test_helpers::TEST_PORT_PEER2, crypto->keyToString(peer2->keyPair.publicKey));
 
-    message::ConnectionMessage connMsg(
-        utils::uuidv4(), fromPeer1, toPeer2, utils::getTimestamp(), "0");
+    message::ConnectionMessage connMsg =
+        message::ConnectionMessage::create(fromPeer1, toPeer2, "0");
 
     EXPECT_NO_THROW(peer1->client->sendMessage(connMsg));
 
@@ -162,8 +162,7 @@ TEST_F(FullChatScenarioTest, TwoPeersCommunicateSuccessfully)
 
     // Send a message from Peer1 to Peer2
     std::string messageContent = "Hello from Peer1!";
-    message::TextMessage textMsg(
-        utils::uuidv4(), fromPeer1, toPeer2, utils::getTimestamp(), messageContent, "0");
+    message::TextMessage textMsg = message::TextMessage::create(fromPeer1, toPeer2, messageContent);
 
     EXPECT_NO_THROW(peer1->client->sendSecretMessage(textMsg));
 
@@ -217,13 +216,13 @@ TEST_F(FullChatScenarioTest, ThreePeersFormNetwork)
         "127.0.0.1", test_helpers::TEST_PORT_PEER3, crypto->keyToString(peer3->keyPair.publicKey));
 
     // Peer1 -> Peer2
-    message::ConnectionMessage conn1to2(utils::uuidv4(), p1, p2, utils::getTimestamp(), "0");
+    message::ConnectionMessage conn1to2 = message::ConnectionMessage::create(p1, p2, "0");
     EXPECT_NO_THROW(peer1->client->sendMessage(conn1to2));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Peer2 -> Peer3
-    message::ConnectionMessage conn2to3(utils::uuidv4(), p2, p3, utils::getTimestamp(), "0");
+    message::ConnectionMessage conn2to3 = message::ConnectionMessage::create(p2, p3, "0");
     EXPECT_NO_THROW(peer2->client->sendMessage(conn2to3));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));

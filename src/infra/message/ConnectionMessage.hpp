@@ -30,6 +30,10 @@ public:
 
     void serialize(json& jData) const override;
     const ConnectionMessagePayload& getPayload() const;
+
+    static ConnectionMessage create(const peer::UserPeer& from,
+                                    const peer::UserPeer& to,
+                                    const std::string& lastHash);
 };
 
 struct ConnectionMessageResponsePayload
@@ -55,5 +59,10 @@ public:
 
     void serialize(json& jData) const override;
     const ConnectionMessageResponsePayload& getPayload() const;
+
+    static ConnectionMessageResponse create(const peer::UserPeer& from,
+                                            const peer::UserPeer& to,
+                                            unsigned int peersToReceive,
+                                            unsigned int missingBlocksCount);
 };
 }  // namespace message

@@ -50,7 +50,7 @@ private:
 public:
     using InputHandler = std::function<void(const std::string&)>;
 
-    static ConsoleUI* instance;
+    static ConsoleUI* instance;  // todo remove Singleton
     static BOOL WINAPI consoleCtrlHandler(DWORD ctrlType);
 
     ConsoleUI();

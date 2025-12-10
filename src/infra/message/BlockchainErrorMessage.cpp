@@ -1,5 +1,8 @@
 #include "BlockchainErrorMessage.hpp"
 
+#include <timestamp.hpp>
+#include <uuid.hpp>
+
 namespace message
 {
 BlockchainErrorMessageResponse::BlockchainErrorMessageResponse() : Message(), payload() {}
@@ -34,6 +37,13 @@ void BlockchainErrorMessageResponse::serialize(json& jData) const
 const BlockchainErrorMessageResponsePayload& BlockchainErrorMessageResponse::getPayload() const
 {
     return payload;
+}
+
+BlockchainErrorMessageResponse BlockchainErrorMessageResponse::create(
+    const peer::UserPeer& from, const std::string& error, const blockchain::Block& block)
+{
+    return BlockchainErrorMessageResponse(
+        utils::uuidv4(), from, utils::getTimestamp(), error, block);
 }
 
 }  // namespace message

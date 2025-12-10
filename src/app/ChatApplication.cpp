@@ -98,15 +98,14 @@ void ChatApplication::handleSendCommand(const std::string& args)
                 return;
             }
 
-            uint64_t timestamp = utils::getTimestamp();
             std::string errors;
 
             for (const auto& peer : peers)
             {
                 try
                 {
-                    message::TextMessage sendMessage(
-                        utils::uuidv4(), from, peer, timestamp, message, "0");
+                    message::TextMessage sendMessage =
+                        message::TextMessage::create(from, peer, message);
                     client->sendSecretMessage(sendMessage);
                 }
                 catch (const std::exception& error)
@@ -153,9 +152,8 @@ void ChatApplication::handleSendCommand(const std::string& args)
             int port = std::stoi(portStr);
 
             peer::UserPeer to = peerService->findPeer(peer::UserHost(host, port));
-            uint64_t timestamp = utils::getTimestamp();
 
-            message::TextMessage sendMessage(utils::uuidv4(), from, to, timestamp, message, "0");
+            message::TextMessage sendMessage = message::TextMessage::create(from, to, message);
             client->sendSecretMessage(sendMessage);
             consoleUI->printLog("[INFO] Message sent to " + host + ":" + std::to_string(port) +
                                 "\n");
@@ -340,7 +338,6 @@ void ChatApplication::init()
     blockchainService->validateLocalChain();
 
     u_int tipIndex = 0;
-    u_int count = 0;
     chainRepo->findTipIndex(tipIndex);
 
     if (peerService->getPeersCount() > 0)
@@ -352,8 +349,9 @@ void ChatApplication::init()
 
         while (start < peersToReceive)
         {
-            message::PeerListMessage message(
-                utils::uuidv4(), from, to, utils::getTimestamp(), start, PEERS_BATCH_SIZE);
+            message::PeerListMessage message =
+                message::PeerListMessage::create(from, to, start, PEERS_BATCH_SIZE);
+
             client->sendMessage(message);
             start += PEERS_BATCH_SIZE;
         }
@@ -362,16 +360,11 @@ void ChatApplication::init()
         start = 0;
         while (start < blocksToReceive)
         {
-            message::BlockRangeMessage message(utils::uuidv4(),
-                                               from,
-                                               to,
-                                               utils::getTimestamp(),
-                                               start,
-                                               BLOCKS_BATCH_SIZE,
-                                               tip.hash);
+            message::BlockRangeMessage message =
+                message::BlockRangeMessage::create(from, to, start, BLOCKS_BATCH_SIZE, tip.hash);
+
             client->sendMessage(message);
             start += BLOCKS_BATCH_SIZE;
-            count += BLOCKS_BATCH_SIZE;
         }
     }
 

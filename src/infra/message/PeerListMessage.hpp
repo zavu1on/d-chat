@@ -29,6 +29,11 @@ public:
 
     void serialize(json& jData) const override;
     const PeerListMessagePayload& getPayload() const;
+
+    static PeerListMessage create(const peer::UserPeer& from,
+                                  const peer::UserPeer& to,
+                                  u_int start,
+                                  u_int count);
 };
 
 struct PeerListMessageResponsePayload
@@ -52,5 +57,9 @@ public:
 
     void serialize(json& jData) const override;
     const PeerListMessageResponsePayload& getPayload() const;
+
+    static PeerListMessageResponse create(const peer::UserPeer& from,
+                                          const peer::UserPeer& to,
+                                          const std::vector<peer::UserPeer>& peers);
 };
 }  // namespace message

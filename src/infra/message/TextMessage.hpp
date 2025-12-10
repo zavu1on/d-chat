@@ -42,6 +42,10 @@ public:
                    const std::shared_ptr<crypto::ICrypto>& crypto) const override;
     const TextMessagePayload& getPayload() const;
     void setBlockHash(const std::string& blockHash);
+
+    static TextMessage create(const peer::UserPeer& from,
+                              const peer::UserPeer& to,
+                              const std::string& message);
 };
 
 class TextMessageResponse : public Message
@@ -55,5 +59,7 @@ public:
     TextMessageResponse(const json& jData);
 
     void serialize(json& jData) const override;
+
+    static TextMessageResponse create(const peer::UserPeer& from, const peer::UserPeer& to);
 };
 }  // namespace message

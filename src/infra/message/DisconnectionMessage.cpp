@@ -1,5 +1,8 @@
 #include "DisconnectionMessage.hpp"
 
+#include "timestamp.hpp"
+#include "uuid.hpp"
+
 namespace message
 {
 DisconnectionMessage::DisconnectionMessage() : Message() {}
@@ -19,6 +22,12 @@ DisconnectionMessage::DisconnectionMessage(const json& jData) : Message(jData)
 
 void DisconnectionMessage::serialize(json& jData) const { jData = getBasicSerialization(); }
 
+DisconnectionMessage DisconnectionMessage::create(const peer::UserPeer& from,
+                                                  const peer::UserPeer& to)
+{
+    return DisconnectionMessage(utils::uuidv4(), from, to, utils::getTimestamp());
+}
+
 DisconnectionMessageResponse::DisconnectionMessageResponse() : Message() {}
 
 DisconnectionMessageResponse::DisconnectionMessageResponse(const std::string& id,
@@ -35,4 +44,10 @@ DisconnectionMessageResponse::DisconnectionMessageResponse(const json& jData) : 
 }
 
 void DisconnectionMessageResponse::serialize(json& jData) const { jData = getBasicSerialization(); }
+
+DisconnectionMessageResponse DisconnectionMessageResponse::create(const peer::UserPeer& from,
+                                                                  const peer::UserPeer& to)
+{
+    return DisconnectionMessageResponse(utils::uuidv4(), from, to, utils::getTimestamp());
+}
 }  // namespace message

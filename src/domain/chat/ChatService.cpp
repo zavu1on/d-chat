@@ -23,9 +23,9 @@ void ChatService::handleIncomingErrorMessage(const json& jData,
 
             peer::UserPeer me(host, port, publicKey);
             peer::UserPeer to(jData["from"]);
-            uint64_t timestamp = utils::getTimestamp();
 
-            message::ErrorMessageResponse errorMessage(utils::uuidv4(), me, to, timestamp, error);
+            message::ErrorMessageResponse errorMessage =
+                message::ErrorMessageResponse::create(me, to, error);
             json jData;
             errorMessage.serialize(jData);
 
@@ -74,13 +74,12 @@ void ChatService::handleIncomingConnectionMessage(const message::ConnectionMessa
     peerService->addPeer({ from.host, from.port, from.publicKey });
 
     peer::UserPeer me{ to.host, to.port, config->get(config::ConfigField::PUBLIC_KEY) };
-    uint64_t timestamp = utils::getTimestamp();
 
     unsigned int peersToReceive = peerService->getPeersCount();
     unsigned int missingCount = blockchainService->countBlocksAfterHash(payload.lastBlockHash);
 
-    message::ConnectionMessageResponse responseMessage(
-        utils::uuidv4(), me, from, timestamp, peersToReceive, missingCount);
+    message::ConnectionMessageResponse responseMessage =
+        message::ConnectionMessageResponse::create(me, from, peersToReceive, missingCount);
 
     json jData;
     responseMessage.serialize(jData);
@@ -121,9 +120,7 @@ void ChatService::handleIncomingTextMessage(const message::TextMessage& message,
                         "\n");
 
     peer::UserPeer me{ to.host, to.port, config->get(config::ConfigField::PUBLIC_KEY) };
-    uint64_t responseTimestamp = utils::getTimestamp();
-
-    message::TextMessageResponse responseMessage(utils::uuidv4(), me, from, responseTimestamp);
+    message::TextMessageResponse responseMessage = message::TextMessageResponse::create(me, from);
 
     json jData;
     responseMessage.serialize(jData);
@@ -156,8 +153,8 @@ void ChatService::handleIncomingPeerListMessage(const message::PeerListMessage& 
         }
     }
 
-    message::PeerListMessageResponse responseMessage(
-        utils::uuidv4(), to, from, utils::getTimestamp(), peers);
+    message::PeerListMessageResponse responseMessage =
+        message::PeerListMessageResponse::create(to, from, peers);
 
     json jData;
     responseMessage.serialize(jData);
@@ -184,8 +181,8 @@ void ChatService::handleIncomingDisconnectionMessage(const message::Disconnectio
 
     peerService->removePeer(from);
 
-    uint64_t timestamp = utils::getTimestamp();
-    message::DisconnectionMessageResponse responseMessage(utils::uuidv4(), to, from, timestamp);
+    message::DisconnectionMessageResponse responseMessage =
+        message::DisconnectionMessageResponse::create(to, from);
 
     json jData;
     responseMessage.serialize(jData);
@@ -206,8 +203,8 @@ void ChatService::handleIncomingBlockRangeMessage(const message::BlockRangeMessa
     blockchainService->getBlocksByIndexRange(
         payload.start, payload.count, payload.lastHash, blocks);
 
-    message::BlockRangeMessageResponse responseMessage(
-        utils::uuidv4(), to, from, utils::getTimestamp(), blocks);
+    message::BlockRangeMessageResponse responseMessage =
+        message::BlockRangeMessageResponse::create(to, from, blocks);
     json jData;
     responseMessage.serialize(jData);
     response = jData.dump();

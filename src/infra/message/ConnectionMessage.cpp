@@ -2,6 +2,9 @@
 
 #include <string>
 
+#include "timestamp.hpp"
+#include "uuid.hpp"
+
 namespace message
 {
 ConnectionMessage::ConnectionMessage() : Message(), payload{} {}
@@ -28,6 +31,13 @@ void ConnectionMessage::serialize(json& jData) const
 }
 
 const ConnectionMessagePayload& ConnectionMessage::getPayload() const { return payload; }
+
+ConnectionMessage ConnectionMessage::create(const peer::UserPeer& from,
+                                            const peer::UserPeer& to,
+                                            const std::string& lastHash)
+{
+    return ConnectionMessage(utils::uuidv4(), from, to, utils::getTimestamp(), lastHash);
+}
 
 ConnectionMessageResponse::ConnectionMessageResponse() : Message() {}
 
@@ -60,5 +70,13 @@ void ConnectionMessageResponse::serialize(json& jData) const
 const ConnectionMessageResponsePayload& ConnectionMessageResponse::getPayload() const
 {
     return payload;
+}
+ConnectionMessageResponse ConnectionMessageResponse::create(const peer::UserPeer& from,
+                                                            const peer::UserPeer& to,
+                                                            unsigned int peersToReceive,
+                                                            unsigned int missingBlocksCount)
+{
+    return ConnectionMessageResponse(
+        utils::uuidv4(), from, to, utils::getTimestamp(), peersToReceive, missingBlocksCount);
 }
 }  // namespace message

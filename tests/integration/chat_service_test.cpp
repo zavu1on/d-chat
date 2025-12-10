@@ -87,7 +87,7 @@ TEST_F(ChatServiceTest, HandleIncomingConnectionMessageSucceeds)
     peer::UserPeer to(
         "127.0.0.1", test_helpers::TEST_PORT_BASE, crypto->keyToString(keyPair.publicKey));
 
-    message::ConnectionMessage connMsg(utils::uuidv4(), from, to, utils::getTimestamp(), "0");
+    message::ConnectionMessage connMsg = message::ConnectionMessage::create(from, to, "0");
 
     nlohmann::json jData;
     connMsg.serialize(jData);
@@ -119,7 +119,7 @@ TEST_F(ChatServiceTest, HandleIncomingPeerListMessageSucceeds)
     peer::UserPeer to(
         "127.0.0.1", test_helpers::TEST_PORT_BASE, crypto->keyToString(keyPair.publicKey));
 
-    message::PeerListMessage peerListMsg(utils::uuidv4(), from, to, utils::getTimestamp(), 0, 10);
+    message::PeerListMessage peerListMsg = message::PeerListMessage::create(from, to, 0, 10);
 
     nlohmann::json jData;
     peerListMsg.serialize(jData);
@@ -144,13 +144,12 @@ TEST_F(ChatServiceTest, HandleOutgoingConnectionMessageUpdatesPeerCount)
     peer::UserPeer to(
         "127.0.0.1", test_helpers::TEST_PORT_BASE, crypto->keyToString(keyPair.publicKey));
 
-    message::ConnectionMessageResponse connResponse(utils::uuidv4(),
-                                                    from,
-                                                    to,
-                                                    utils::getTimestamp(),
-                                                    5,  // peersToReceive
-                                                    10  // missingBlocksCount
-    );
+    message::ConnectionMessageResponse connResponse =
+        message::ConnectionMessageResponse::create(from,
+                                                   to,
+                                                   5,  // peersToReceive
+                                                   10  // missingBlocksCount
+        );
 
     nlohmann::json jData;
     connResponse.serialize(jData);
@@ -224,8 +223,8 @@ TEST_F(ChatServiceTest, HandleIncomingBlockRangeMessageReturnsBlocks)
     peer::UserPeer to(
         "127.0.0.1", test_helpers::TEST_PORT_BASE, crypto->keyToString(keyPair.publicKey));
 
-    message::BlockRangeMessage blockRangeMsg(
-        utils::uuidv4(), from, to, utils::getTimestamp(), 0, 2, "0");
+    message::BlockRangeMessage blockRangeMsg =
+        message::BlockRangeMessage::create(from, to, 0, 2, "0");
 
     nlohmann::json jData;
     blockRangeMsg.serialize(jData);

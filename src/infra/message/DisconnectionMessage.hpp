@@ -19,6 +19,8 @@ public:
     DisconnectionMessage(const json& jData);
 
     void serialize(json& jData) const override;
+
+    static DisconnectionMessage create(const peer::UserPeer& from, const peer::UserPeer& to);
 };
 
 class DisconnectionMessageResponse : public Message
@@ -32,5 +34,8 @@ public:
     DisconnectionMessageResponse(const json& jData);
 
     void serialize(json& jData) const override;
+
+    static DisconnectionMessageResponse create(const peer::UserPeer& from,
+                                               const peer::UserPeer& to);
 };
 }  // namespace message

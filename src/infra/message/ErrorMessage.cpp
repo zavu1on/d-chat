@@ -1,5 +1,9 @@
 #include "ErrorMessage.hpp"
 
+#include "timestamp.hpp"
+#include "uuid.hpp"
+
+
 namespace message
 {
 ErrorMessageResponse::ErrorMessageResponse() : Message(), payload() {}
@@ -27,5 +31,12 @@ void ErrorMessageResponse::serialize(json& jData) const
 }
 
 const ErrorMessageResponsePayload& ErrorMessageResponse::getPayload() const { return payload; }
+
+ErrorMessageResponse ErrorMessageResponse::create(const peer::UserPeer& from,
+                                                  const peer::UserPeer& to,
+                                                  const std::string& error)
+{
+    return ErrorMessageResponse(utils::uuidv4(), from, to, utils::getTimestamp(), error);
+}
 
 }  // namespace message

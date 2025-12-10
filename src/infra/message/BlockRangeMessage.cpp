@@ -1,5 +1,8 @@
 #include "BlockRangeMessage.hpp"
 
+#include "timestamp.hpp"
+#include "uuid.hpp"
+
 namespace message
 {
 
@@ -34,6 +37,16 @@ void BlockRangeMessage::serialize(json& jData) const
 }
 
 const BlockRangeMessagePayload& BlockRangeMessage::getPayload() const { return payload; }
+
+BlockRangeMessage BlockRangeMessage::create(const peer::UserPeer& from,
+                                            const peer::UserPeer& to,
+                                            u_int start,
+                                            u_int count,
+                                            const std::string& lastHash)
+{
+    return BlockRangeMessage(
+        utils::uuidv4(), from, to, utils::getTimestamp(), start, count, lastHash);
+}
 
 BlockRangeMessageResponse::BlockRangeMessageResponse() : Message(), payload() {}
 
@@ -72,5 +85,12 @@ void BlockRangeMessageResponse::serialize(json& jData) const
 const BlockRangeMessageResponsePayload& BlockRangeMessageResponse::getPayload() const
 {
     return payload;
+}
+BlockRangeMessageResponse BlockRangeMessageResponse::create(
+    const peer::UserPeer& from,
+    const peer::UserPeer& to,
+    const std::vector<blockchain::Block>& blocks)
+{
+    return BlockRangeMessageResponse(utils::uuidv4(), from, to, utils::getTimestamp(), blocks);
 }
 }  // namespace message

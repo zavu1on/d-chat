@@ -24,5 +24,9 @@ public:
 
     void serialize(json& jData) const override;
     const ErrorMessageResponsePayload& getPayload() const;
+
+    static ErrorMessageResponse create(const peer::UserPeer& from,
+                                       const peer::UserPeer& to,
+                                       const std::string& error);
 };
 }  // namespace message

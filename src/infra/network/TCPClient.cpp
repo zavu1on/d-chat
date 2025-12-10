@@ -32,9 +32,8 @@ TCPClient::TCPClient(const std::shared_ptr<config::IConfig>& config,
     for (const auto& userHost : hosts)
     {
         peer::UserPeer to{ userHost.host, userHost.port, "" };
-        u_int64 timestamp = utils::getTimestamp();
 
-        message::ConnectionMessage message(utils::uuidv4(), from, to, timestamp, lastHash);
+        message::ConnectionMessage message = message::ConnectionMessage::create(from, to, lastHash);
         sendMessage(message);
     }
 }
@@ -49,9 +48,7 @@ void TCPClient::connectToAllPeers()
 
     for (const auto& to : peers)
     {
-        u_int64 timestamp = utils::getTimestamp();
-
-        message::ConnectionMessage message(utils::uuidv4(), from, to, timestamp, "0");
+        message::ConnectionMessage message = message::ConnectionMessage::create(from, to, "0");
         sendMessage(message);
     }
 }
@@ -137,7 +134,7 @@ void TCPClient::disconnect()
 
     for (const auto& peer : peers)
     {
-        message::DisconnectionMessage message(utils::uuidv4(), from, peer, utils::getTimestamp());
+        message::DisconnectionMessage message = message::DisconnectionMessage::create(from, peer);
         sendMessage(message);
     }
 }

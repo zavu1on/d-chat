@@ -26,5 +26,9 @@ public:
 
     void serialize(json& jData) const override;
     const BlockchainErrorMessageResponsePayload& getPayload() const;
+
+    static BlockchainErrorMessageResponse create(const peer::UserPeer& from,
+                                                 const std::string& error,
+                                                 const blockchain::Block& block);
 };
 }  // namespace message

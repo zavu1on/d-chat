@@ -1,5 +1,8 @@
 #include "PeerListMessage.hpp"
 
+#include "timestamp.hpp"
+#include "uuid.hpp"
+
 namespace message
 {
 PeerListMessage::PeerListMessage() : Message(), payload{} {}
@@ -31,6 +34,14 @@ void PeerListMessage::serialize(json& jData) const
 }
 
 const PeerListMessagePayload& PeerListMessage::getPayload() const { return payload; }
+
+PeerListMessage PeerListMessage::create(const peer::UserPeer& from,
+                                        const peer::UserPeer& to,
+                                        u_int start,
+                                        u_int count)
+{
+    return PeerListMessage(utils::uuidv4(), from, to, utils::getTimestamp(), start, count);
+}
 
 PeerListMessageResponse::PeerListMessageResponse() : Message() {}
 
@@ -68,5 +79,12 @@ void PeerListMessageResponse::serialize(json& jData) const
 const PeerListMessageResponsePayload& PeerListMessageResponse::getPayload() const
 {
     return payload;
+}
+
+PeerListMessageResponse PeerListMessageResponse::create(const peer::UserPeer& from,
+                                                        const peer::UserPeer& to,
+                                                        const std::vector<peer::UserPeer>& peers)
+{
+    return PeerListMessageResponse(utils::uuidv4(), to, from, utils::getTimestamp(), peers);
 }
 }  // namespace message

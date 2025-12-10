@@ -1,5 +1,8 @@
 #include "TextMessage.hpp"
 
+#include "timestamp.hpp"
+#include "uuid.hpp"
+
 namespace message
 {
 crypto::Bytes TextMessage::createSessionKey(const std::string& privateKey,
@@ -75,6 +78,13 @@ const TextMessagePayload& TextMessage::getPayload() const { return payload; }
 
 void TextMessage::setBlockHash(const std::string& blockHash) { this->blockHash = blockHash; }
 
+TextMessage TextMessage::create(const peer::UserPeer& from,
+                                const peer::UserPeer& to,
+                                const std::string& message)
+{
+    return TextMessage(utils::uuidv4(), from, to, utils::getTimestamp(), message, "0");
+}
+
 TextMessageResponse::TextMessageResponse() : Message() {}
 
 TextMessageResponse::TextMessageResponse(const std::string& id,
@@ -88,4 +98,10 @@ TextMessageResponse::TextMessageResponse(const std::string& id,
 TextMessageResponse::TextMessageResponse(const json& jData) : Message(jData) {}
 
 void TextMessageResponse::serialize(json& jData) const { jData = getBasicSerialization(); }
+
+TextMessageResponse TextMessageResponse::create(const peer::UserPeer& from,
+                                                const peer::UserPeer& to)
+{
+    return TextMessageResponse(utils::uuidv4(), from, to, utils::getTimestamp());
+}
 }  // namespace message

@@ -5,7 +5,6 @@
 #include "BlockchainErrorMessage.hpp"
 #include "sha256.hpp"
 #include "timestamp.hpp"
-#include "uuid.hpp"
 
 namespace blockchain
 {
@@ -138,8 +137,8 @@ void BlockchainService::onIncomingBlock(const json& jData, std::string& response
                 static_cast<unsigned short>(stoi(config->get(config::ConfigField::PORT))),
                 config->get(config::ConfigField::PUBLIC_KEY));
 
-            message::BlockchainErrorMessageResponse errorResponse(
-                utils::uuidv4(), me, utils::getTimestamp(), error, block);
+            message::BlockchainErrorMessageResponse errorResponse =
+                message::BlockchainErrorMessageResponse::create(me, error, block);
 
             json jData;
             errorResponse.serialize(jData);

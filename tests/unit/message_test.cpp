@@ -3,7 +3,6 @@
 #include "ConnectionMessage.hpp"
 #include "OpenSSLCrypto.hpp"
 #include "PeerListMessage.hpp"
-#include "TextMessage.hpp"
 #include "timestamp.hpp"
 #include "uuid.hpp"
 
@@ -50,11 +49,10 @@ TEST_F(MessageTest, ConnectionMessageSerializationWorks)
 TEST_F(MessageTest, PeerListMessageSerializationWorks)
 {
     std::string id = utils::uuidv4();
-    uint64_t timestamp = utils::getTimestamp();
     unsigned int start = 0;
     unsigned int count = 10;
 
-    message::PeerListMessage original(id, from, to, timestamp, start, count);
+    message::PeerListMessage original = message::PeerListMessage::create(from, to, start, count);
 
     nlohmann::json jData;
     original.serialize(jData);

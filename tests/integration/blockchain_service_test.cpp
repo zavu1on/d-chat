@@ -154,8 +154,7 @@ TEST_F(BlockchainServiceTest, CreateBlockFromMessageSucceeds)
     peer::UserPeer from = test_helpers::createTestPeer(test_helpers::TEST_PORT_PEER1, crypto);
     peer::UserPeer to = test_helpers::createTestPeer(test_helpers::TEST_PORT_PEER2, crypto);
 
-    message::TextMessage textMsg(
-        utils::uuidv4(), from, to, utils::getTimestamp(), "Hello, World!", "0");
+    message::TextMessage textMsg = message::TextMessage::create(from, to, "Hello, World!");
 
     blockchain::Block block;
     blockchainService->createBlockFromMessage(textMsg, block);
@@ -174,8 +173,7 @@ TEST_F(BlockchainServiceTest, CompareBlockWithMessageSucceeds)
     peer::UserPeer to = test_helpers::createTestPeer(test_helpers::TEST_PORT_PEER2, crypto);
 
     std::string messageContent = "Test message content";
-    message::TextMessage textMsg(
-        utils::uuidv4(), from, to, utils::getTimestamp(), messageContent, "0");
+    message::TextMessage textMsg = message::TextMessage::create(from, to, messageContent);
 
     blockchain::Block block;
     blockchainService->createBlockFromMessage(textMsg, block);
@@ -191,11 +189,9 @@ TEST_F(BlockchainServiceTest, CompareBlockWithDifferentMessageFails)
         "127.0.0.1", test_helpers::TEST_PORT_PEER1, crypto->keyToString(keyPair.publicKey));
     peer::UserPeer to = test_helpers::createTestPeer(test_helpers::TEST_PORT_PEER2, crypto);
 
-    message::TextMessage textMsg1(
-        utils::uuidv4(), from, to, utils::getTimestamp(), "First message", "0");
+    message::TextMessage textMsg1 = message::TextMessage::create(from, to, "First message");
 
-    message::TextMessage textMsg2(
-        utils::uuidv4(), from, to, utils::getTimestamp(), "Different message", "0");
+    message::TextMessage textMsg2 = message::TextMessage::create(from, to, "Different message");
 
     blockchain::Block block;
     blockchainService->createBlockFromMessage(textMsg1, block);

@@ -34,6 +34,12 @@ public:
 
     void serialize(json& jData) const override;
     const BlockRangeMessagePayload& getPayload() const;
+
+    static BlockRangeMessage create(const peer::UserPeer& from,
+                                    const peer::UserPeer& to,
+                                    u_int start,
+                                    u_int count,
+                                    const std::string& lastHash);
 };
 
 struct BlockRangeMessageResponsePayload
@@ -57,5 +63,9 @@ public:
 
     void serialize(json& jData) const override;
     const BlockRangeMessageResponsePayload& getPayload() const;
+
+    static BlockRangeMessageResponse create(const peer::UserPeer& from,
+                                            const peer::UserPeer& to,
+                                            const std::vector<blockchain::Block>& blocks);
 };
 }  // namespace message

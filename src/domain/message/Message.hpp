@@ -6,8 +6,6 @@
 #include "ICrypto.hpp"
 #include "UserPeer.hpp"
 
-// todo create message factory
-
 namespace message
 {
 using json = nlohmann::json;
