@@ -75,6 +75,7 @@ add_executable(
     e2e_tests
     e2e/full_chat_scenario_test.cpp
     e2e/blockchain_sync_test.cpp
+    e2e/blockchain_fork_stress_test.cpp  
 )
 
 target_link_libraries(

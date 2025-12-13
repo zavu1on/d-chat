@@ -10,7 +10,6 @@
 #include "Message.hpp"
 #include "MessageService.hpp"
 #include "PeerService.hpp"
-#include "SocketClient.hpp"
 
 namespace network
 {

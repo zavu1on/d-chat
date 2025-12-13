@@ -1,6 +1,7 @@
 #include "TCPClient.hpp"
 
 #include "DisconnectionMessage.hpp"
+#include "SocketClient.hpp"
 #include "SocketServer.hpp"
 #include "timestamp.hpp"
 #include "uuid.hpp"
@@ -56,7 +57,7 @@ void TCPClient::connectToAllPeers()
 void TCPClient::sendMessage(const message::Message& message)
 {
     if (typeid(message) == typeid(message::SecretMessage))
-        throw std::runtime_error("Secret messages should be sent by sendBlock() method");
+        throw std::runtime_error("Secret messages should be sent by sendSecretMessage() method");
 
     peer::UserPeer to = message.getTo();
     SocketClient client;
@@ -64,10 +65,11 @@ void TCPClient::sendMessage(const message::Message& message)
 
     json jMessage;
     message.serialize(jMessage);
+    std::string serializedMessage = jMessage.dump();
 
-    if (jMessage.size() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
+    if (serializedMessage.length() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
 
-    if (client.sendMessage(jMessage.dump()))
+    if (client.sendMessage(serializedMessage))
     {
         std::string response = client.receiveMessage();
         chatService->handleOutgoingMessage(response);
@@ -86,8 +88,6 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
     message::TextMessage& textMessage =
         const_cast<message::TextMessage&>(dynamic_cast<const message::TextMessage&>(message));
 
-    if (jMessage.size() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
-
     blockchain::Block block;
     blockchainService->createBlockFromMessage(textMessage, block);
     textMessage.setBlockHash(block.hash);
@@ -95,32 +95,61 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
     textMessage.serialize(jMessage, config->get(config::ConfigField::PRIVATE_KEY), crypto);
     std::string serializedMessage = jMessage.dump();
 
+    if (serializedMessage.length() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
+
     if (client.sendMessage(serializedMessage))
     {
         std::string response = client.receiveMessage();
         chatService->handleOutgoingMessage(response);
-    }
-    client.disconnect();
 
-    std::vector<peer::UserPeer> peers = peerService->getPeers();
-
-    auto sendCallback = [this](const std::string& raw, const peer::UserPeer& peer) -> bool
-    {
-        SocketClient client;
-        client.connectTo(peer.host, peer.port);
-        bool ok = client.sendMessage(raw);
-        client.disconnect();
-        return ok;
-    };
-
-    bool stored = blockchainService->storeAndBroadcastBlock(block, peers, sendCallback);
-    if (stored)
-    {
         messageService->insertSecretMessage(textMessage, serializedMessage, block.hash);
         peerService->addChatPeer(textMessage.getTo());
+
+        auto sendCallback = [this](const std::string& raw, const peer::UserPeer& peer) -> bool
+        {
+            SocketClient localClient;
+            localClient.connectTo(peer.host, peer.port);
+            bool ok = true;
+
+            if (localClient.sendMessage(raw))
+            {
+                try
+                {
+                    std::string response = localClient.receiveMessage();
+                    json jResponse = json::parse(response);
+
+                    if (jResponse.contains("type") &&
+                        jResponse["type"] == message::Message::fromMessageTypeToString(
+                                                 message::MessageType::BLOCKCHAIN_ERROR_RESPONSE))
+                        ok = false;
+                }
+                catch (...)
+                {
+                    ok = false;
+                }
+            }
+
+            localClient.disconnect();
+            return ok;
+        };
+
+        std::vector<peer::UserPeer> peers = peerService->getPeers();
+        bool stored = blockchainService->storeAndBroadcastBlock(block, peers, sendCallback);
+
+        if (!stored)
+        {
+            messageService->removeMessageByBlockHash(block.hash);
+            consoleUI->printLog("[WARN] block was not stored (maybe duplicate)");
+
+            message::BlockchainErrorMessageResponse errorMessage =
+                message::BlockchainErrorMessageResponse::create(
+                    to, "Block was not stored (maybe duplicate)", block);
+            errorMessage.serialize(jMessage);
+
+            client.sendMessage(jMessage.dump());
+        }
     }
-    else
-        consoleUI->printLog("[WARN] block was not stored (maybe duplicate)");
+    client.disconnect();
 }
 
 void TCPClient::disconnect()

@@ -102,29 +102,31 @@ bool BlockchainService::storeAndBroadcastBlock(
     const std::vector<peer::UserPeer>& peers,
     const std::function<bool(const std::string&, const peer::UserPeer&)>& sendCallback)
 {
-    bool ok = chainRepo->insertBlock(block);
-    if (!ok) return false;
-
     std::string rawJson = block.toJson().dump();
 
     for (const auto& p : peers)
     {
         try
         {
-            sendCallback(rawJson, p);
+            if (!sendCallback(rawJson, p)) return false;
         }
         catch (std::exception& error)
         {
             consoleUI->printLog(
                 "[BLOCKCHAIN] error sending block to peer: " + std::string(error.what()) + "\n");
+            return false;
         }
     }
 
-    return true;
+    return chainRepo->insertBlock(block);
 }
 
 void BlockchainService::onIncomingBlock(const json& jData, std::string& response)
 {
+    peer::UserPeer me(config->get(config::ConfigField::HOST),
+                      static_cast<unsigned short>(stoi(config->get(config::ConfigField::PORT))),
+                      config->get(config::ConfigField::PUBLIC_KEY));
+
     try
     {
         Block block(jData);
@@ -132,11 +134,6 @@ void BlockchainService::onIncomingBlock(const json& jData, std::string& response
 
         if (!validateIncomingBlock(block, error))
         {
-            peer::UserPeer me(
-                config->get(config::ConfigField::HOST),
-                static_cast<unsigned short>(stoi(config->get(config::ConfigField::PORT))),
-                config->get(config::ConfigField::PUBLIC_KEY));
-
             message::BlockchainErrorMessageResponse errorResponse =
                 message::BlockchainErrorMessageResponse::create(me, error, block);
 
@@ -150,11 +147,19 @@ void BlockchainService::onIncomingBlock(const json& jData, std::string& response
         chainRepo->insertBlock(block);
         response = "{}";
     }
-    catch (const std::exception& e)
+    catch (const std::exception& error)
     {
-        consoleUI->printLog("[BLOCKCHAIN] Exception parsing block: " + std::string(e.what()) +
+        consoleUI->printLog("[BLOCKCHAIN] Exception parsing block: " + std::string(error.what()) +
                             "\n");
-        response = "{}";
+
+        message::BlockchainErrorMessageResponse errorResponse =
+            message::BlockchainErrorMessageResponse::create(
+                me, error.what(), Block{ "0", "0", "0", "0", "0", 0 });
+
+        json jData;
+        errorResponse.serialize(jData);
+
+        response = jData.dump();
     }
 }
 

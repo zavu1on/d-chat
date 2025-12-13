@@ -5,7 +5,6 @@
 
 namespace blockchain
 {
-
 ChainDB::ChainDB(const std::shared_ptr<db::DBFile>& db,
                  const std::shared_ptr<config::IConfig>& config,
                  const std::shared_ptr<crypto::ICrypto>& crypto)
@@ -35,6 +34,20 @@ void ChainDB::init()
 
 bool ChainDB::insertBlock(const Block& block)
 {
+    if (block.previousHash != "0")
+    {
+        bool found = false;
+        std::string query = "SELECT * FROM blocks WHERE previous_hash = ?";
+        db->selectPrepared("SELECT * FROM blocks WHERE previous_hash = ?",
+                           { block.previousHash },
+                           [&found](const std::vector<std::string>& row)
+                           {
+                               if (!row.empty()) found = true;
+                           });
+
+        if (found) return false;
+    }
+
     return db->executePrepared(
         "INSERT INTO blocks(hash, previous_hash, payload_hash, author_public_key, signature, "
         "timestamp)"
