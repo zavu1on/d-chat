@@ -118,7 +118,13 @@ bool BlockchainService::storeAndBroadcastBlock(
         }
     }
 
-    return chainRepo->insertBlock(block);
+    if (!chainRepo->insertBlock(block))
+    {
+        consoleUI->printLog("[BLOCKCHAIN] Failed to store block: " + block.hash +
+                            "(fork  probably)\n");
+        return false;
+    }
+    return true;
 }
 
 void BlockchainService::onIncomingBlock(const json& jData, std::string& response)
