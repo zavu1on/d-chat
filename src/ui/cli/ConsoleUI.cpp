@@ -9,36 +9,38 @@ ConsoleUI* ConsoleUI::instance = nullptr;
 ConsoleUI::ConsoleUI()
     : running(false), hConsole(INVALID_HANDLE_VALUE), historyIndex(0), cursorPosition(0)
 {
-    instance = this;
+    instance = this;  // save pointer to this instance for access from consoleCtrlHandler
 
-    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);       // get default output console thread handle
+    SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);  // add another one system event handler
 }
 
 ConsoleUI::~ConsoleUI()
 {
     stop();
-    SetConsoleCtrlHandler(consoleCtrlHandler, FALSE);
+    SetConsoleCtrlHandler(consoleCtrlHandler, FALSE);  // remove system event handler
     if (instance == this) instance = nullptr;
 }
 
+// win api supports function only (not method) with WINAPI signature
 BOOL WINAPI ConsoleUI::consoleCtrlHandler(DWORD ctrlType)
 {
     switch (ctrlType)
     {
-        case CTRL_C_EVENT:
-        case CTRL_BREAK_EVENT:
-        case CTRL_CLOSE_EVENT:
-        case CTRL_LOGOFF_EVENT:
-        case CTRL_SHUTDOWN_EVENT:
+        case CTRL_C_EVENT:         // CTRL+C
+        case CTRL_BREAK_EVENT:     // CTRL+Break
+        case CTRL_CLOSE_EVENT:     // close window
+        case CTRL_LOGOFF_EVENT:    // logoff
+        case CTRL_SHUTDOWN_EVENT:  // shutdown
         {
             if (instance)
             {
                 if (instance->shutdownCallback) instance->shutdownCallback();
-                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                std::this_thread::sleep_for(std::chrono::milliseconds(
+                    500));  // await to finish application correctly (wait for async tasks because
+                            // of Windows shutdown process immediately)
             }
-            return TRUE;
+            return TRUE;  // do not transfer control to other handlers
         }
         default:
             return FALSE;
@@ -54,34 +56,21 @@ void ConsoleUI::clearInputLine()
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
 
-    savedCursorPosition = csbi.dwCursorPosition;
+    savedCursorPosition = csbi.dwCursorPosition;  // save cursor position
 
     COORD coord;
     coord.X = 0;
     coord.Y = csbi.dwCursorPosition.Y;
-    SetConsoleCursorPosition(hConsole, coord);
+    SetConsoleCursorPosition(hConsole, coord);  // move cursor to start
 
-    DWORD written;
-    FillConsoleOutputCharacter(hConsole, ' ', csbi.dwSize.X, coord, &written);
+    DWORD written;  // number of written characters
+    FillConsoleOutputCharacter(
+        hConsole, ' ', csbi.dwSize.X, coord, &written);  // clear line (fill with spaces)
 
     SetConsoleCursorPosition(hConsole, coord);
 }
 
 void ConsoleUI::restoreInputLine() { std::cout << "> " << currentInput << std::flush; }
-
-void ConsoleUI::moveCursorToInputStart()
-{
-    if (hConsole == INVALID_HANDLE_VALUE) return;
-
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
-    {
-        COORD coord;
-        coord.X = 0;
-        coord.Y = csbi.dwCursorPosition.Y;
-        SetConsoleCursorPosition(hConsole, coord);
-    }
-}
 
 void ConsoleUI::setCursorPosition(size_t pos)
 {
@@ -91,7 +80,7 @@ void ConsoleUI::setCursorPosition(size_t pos)
     if (GetConsoleScreenBufferInfo(hConsole, &csbi))
     {
         COORD coord;
-        coord.X = static_cast<SHORT>(2 + pos);
+        coord.X = static_cast<SHORT>(2 + pos);  // "> " + input
         coord.Y = csbi.dwCursorPosition.Y;
         SetConsoleCursorPosition(hConsole, coord);
     }
@@ -107,10 +96,10 @@ void ConsoleUI::redrawInputLine(const std::string& input)
     COORD coord;
     coord.X = 0;
     coord.Y = csbi.dwCursorPosition.Y;
-    SetConsoleCursorPosition(hConsole, coord);
+    SetConsoleCursorPosition(hConsole, coord);  // move to start
 
-    DWORD written;
-    FillConsoleOutputCharacter(hConsole, ' ', csbi.dwSize.X, coord, &written);
+    DWORD written;  // number of written characters
+    FillConsoleOutputCharacter(hConsole, ' ', csbi.dwSize.X, coord, &written);  // clear line
     SetConsoleCursorPosition(hConsole, coord);
 
     std::cout << "> " << input << std::flush;
@@ -279,9 +268,9 @@ void ConsoleUI::startInputLoop(InputHandler handler)
 
             while (running.load(std::memory_order_acquire))
             {
-                if (_kbhit())
+                if (_kbhit())  // when key pressed
                 {
-                    int ch = _getch();
+                    int ch = _getch();  // read key
 
                     if (ch == '\r' || ch == '\n')
                     {
@@ -301,7 +290,7 @@ void ConsoleUI::startInputLoop(InputHandler handler)
                             cursorPosition = 0;
                             historyIndex = commandHistory.size();
 
-                            if (handler) handler(inputCopy);
+                            if (handler) handler(inputCopy);  // callback
                         }
 
                         if (running.load(std::memory_order_acquire))
@@ -311,7 +300,7 @@ void ConsoleUI::startInputLoop(InputHandler handler)
                             cursorPosition = 0;
                         }
                     }
-                    else if (ch == 0 || ch == 0xE0 || ch == 224)
+                    else if (ch == 0 || ch == 0xE0 || ch == 224)  // extended keys
                     {
                         if (_kbhit())
                         {
@@ -320,14 +309,10 @@ void ConsoleUI::startInputLoop(InputHandler handler)
                         }
                     }
                     else
-                    {
                         handleKeyPress(static_cast<char>(ch), input);
-                    }
                 }
                 else
-                {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
             }
         });
 }
@@ -348,6 +333,7 @@ void ConsoleUI::printLog(const std::string& msg)
 void ConsoleUI::stop()
 {
     bool expected = true;
+    // compare_exchange_strong ensures that the method is executed only once
     if (!running.compare_exchange_strong(expected, false, std::memory_order_acq_rel)) return;
 
     if (inputThread.joinable())
@@ -355,13 +341,12 @@ void ConsoleUI::stop()
         std::thread::id currentThreadId = std::this_thread::get_id();
         std::thread::id inputThreadId = inputThread.get_id();
 
-        if (currentThreadId == inputThreadId)
-        {
-            inputThread.detach();
-        }
+        if (currentThreadId == inputThreadId)  // if called from inputThread
+            inputThread.detach();              // prevents deadlock
         else
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(100));  // wait time for another task
             if (inputThread.joinable()) inputThread.join();
         }
     }

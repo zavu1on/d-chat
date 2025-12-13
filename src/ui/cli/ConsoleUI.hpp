@@ -37,7 +37,6 @@ private:
     void clearInputLine();
     void restoreInputLine();
     void redrawInputLine(const std::string& input);
-    void moveCursorToInputStart();
     void setCursorPosition(size_t pos);
 
     void handleKeyPress(char ch, std::string& input);
@@ -50,7 +49,7 @@ private:
 public:
     using InputHandler = std::function<void(const std::string&)>;
 
-    static ConsoleUI* instance;  // todo remove Singleton
+    static ConsoleUI* instance;
     static BOOL WINAPI consoleCtrlHandler(DWORD ctrlType);
 
     ConsoleUI();
