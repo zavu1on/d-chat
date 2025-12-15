@@ -67,9 +67,11 @@ bool MessageService::insertSecretMessage(const TextMessage& message,
     return messageRepo->insertSecretMessage(message, messageDump, blockHash);
 }
 
-bool MessageService::removeMessageByBlockHash(const std::string& blockHash)
+bool MessageService::removeMessageByBlockHashOrId(const std::string& blockHash,
+                                                  const std::string& messageId)
 {
-    return messageRepo->removeMessageByBlockHash(blockHash);
+    return messageRepo->removeMessageByBlockHash(blockHash) ||
+           messageRepo->removeMessageById(messageId);
 }
 
 }  // namespace message

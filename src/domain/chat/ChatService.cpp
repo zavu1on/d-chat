@@ -46,12 +46,10 @@ void ChatService::handleOutgoingBlockchainErrorMessage(
     consoleUI->printLog("[CLIENT] Blockchain error response from:  " + from.host + ":" +
                         std::to_string(from.port) + " " + payload.error + "\n");
 
-    if (messageService->removeMessageByBlockHash(payload.block.hash))
+    if (messageService->removeMessageByBlockHashOrId(payload.blockHash, payload.messageId))
     {
-        consoleUI->printLog(
-            "[CLIENT] can not save message without successfully delivered blocks, removed message "
-            "for block " +
-            payload.block.hash + "\n");
+        consoleUI->printLog("[CLIENT] " + payload.error + ". Remove message for block " +
+                            payload.blockHash + "\n");
     }
 }
 
@@ -274,6 +272,12 @@ void ChatService::handleIncomingMessage(const json& jMessage, std::string& respo
         {
             message::DisconnectionMessage message(jMessage);
             handleIncomingDisconnectionMessage(message, response);
+        }
+        else if (jMessage["type"] == message::Message::fromMessageTypeToString(
+                                         message::MessageType::BLOCKCHAIN_ERROR_RESPONSE))
+        {
+            message::BlockchainErrorMessageResponse message(jMessage);
+            handleOutgoingBlockchainErrorMessage(message);
         }
         else
             response = R"({"type":"ERROR_RESPONSE","error":"Invalid message type"})";

@@ -32,5 +32,6 @@ public:
                              const std::string& messageDump,
                              const std::string& blockHash) override;
     bool removeMessageByBlockHash(const std::string& blockHash) override;
+    bool removeMessageById(const std::string& messageId) override;
 };
 }  // namespace message

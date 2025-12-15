@@ -141,7 +141,7 @@ void BlockchainService::onIncomingBlock(const json& jData, std::string& response
         if (!validateIncomingBlock(block, error))
         {
             message::BlockchainErrorMessageResponse errorResponse =
-                message::BlockchainErrorMessageResponse::create(me, error, block);
+                message::BlockchainErrorMessageResponse::create(me, error, block.hash, "-1");
 
             json jData;
             errorResponse.serialize(jData);
@@ -159,8 +159,7 @@ void BlockchainService::onIncomingBlock(const json& jData, std::string& response
                             "\n");
 
         message::BlockchainErrorMessageResponse errorResponse =
-            message::BlockchainErrorMessageResponse::create(
-                me, error.what(), Block{ "0", "0", "0", "0", "0", 0 });
+            message::BlockchainErrorMessageResponse::create(me, error.what(), "-1", "-1");
 
         json jData;
         errorResponse.serialize(jData);
@@ -223,7 +222,8 @@ bool BlockchainService::validateIncomingBlock(const Block& block, std::string& e
     }
 
     Block tip;
-    if (chainRepo->findTip(tip) && block.previousHash != tip.hash)
+    chainRepo->findTip(tip);
+    if (block.previousHash != tip.hash)
     {
         Block prevBlock;
         if (!chainRepo->findBlockByHash(block.previousHash, prevBlock))

@@ -2,7 +2,6 @@
 
 #include "SocketServer.hpp"
 
-
 namespace network
 {
 void SocketClient::ensureInitialized()

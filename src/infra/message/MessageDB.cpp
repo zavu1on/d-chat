@@ -118,4 +118,9 @@ bool MessageDB::removeMessageByBlockHash(const std::string& blockHash)
 {
     return db->executePrepared("DELETE FROM messages WHERE block_hash=?;", { blockHash });
 }
+
+bool MessageDB::removeMessageById(const std::string& messageId)
+{
+    return db->executePrepared("DELETE FROM messages WHERE id=?;", { messageId });
+}
 }  // namespace message

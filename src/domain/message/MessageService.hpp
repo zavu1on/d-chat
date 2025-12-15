@@ -36,6 +36,6 @@ public:
     bool insertSecretMessage(const TextMessage& message,
                              const std::string& messageDump,
                              const std::string& blockHash);
-    bool removeMessageByBlockHash(const std::string& blockHash);
+    bool removeMessageByBlockHashOrId(const std::string& blockHash, const std::string& messageId);
 };
 }  // namespace message

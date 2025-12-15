@@ -19,5 +19,6 @@ public:
                                      const std::string& messageDump,
                                      const std::string& blockHash) = 0;
     virtual bool removeMessageByBlockHash(const std::string& blockHash) = 0;
+    virtual bool removeMessageById(const std::string& messageId) = 0;
 };
 }  // namespace message

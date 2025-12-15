@@ -154,7 +154,7 @@ TEST_F(MessageServiceTest, RemoveMessageByBlockHashSucceeds)
         crypto->keyToString(keyPair1.publicKey), crypto->keyToString(keyPair2.publicKey), messages);
     EXPECT_EQ(messages.size(), 1);
 
-    EXPECT_TRUE(messageService->removeMessageByBlockHash(blockHash));
+    EXPECT_TRUE(messageService->removeMessageByBlockHashOrId(blockHash, msg.getId()));
 
     messages.clear();
     messageService->findChatMessages(

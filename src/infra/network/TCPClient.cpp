@@ -81,8 +81,8 @@ void TCPClient::sendMessage(const message::Message& message)
 void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 {
     peer::UserPeer to = message.getTo();
-    SocketClient client;
-    client.connectTo(to.host, to.port);
+    SocketClient textMessageClient;
+    textMessageClient.connectTo(to.host, to.port);
 
     json jMessage;
     message::TextMessage& textMessage =
@@ -97,9 +97,10 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 
     if (serializedMessage.length() > BUFFER_SIZE) throw std::runtime_error("Message is too big");
 
-    if (client.sendMessage(serializedMessage))
+    if (textMessageClient.sendMessage(serializedMessage))
     {
-        std::string response = client.receiveMessage();
+        std::string response = textMessageClient.receiveMessage();
+        textMessageClient.disconnect();
         chatService->handleOutgoingMessage(response);
 
         messageService->insertSecretMessage(textMessage, serializedMessage, block.hash);
@@ -138,18 +139,24 @@ void TCPClient::sendSecretMessage(const message::SecretMessage& message)
 
         if (!stored)
         {
-            messageService->removeMessageByBlockHash(block.hash);
-            consoleUI->printLog("[WARN] block was not stored (maybe duplicate)");
+            messageService->removeMessageByBlockHashOrId(block.hash, message.getId());
+            consoleUI->printLog("[WARN] block was not stored (maybe duplicate or fork)\n");
+
+            SocketClient errorMessageClient;
+            errorMessageClient.connectTo(to.host, to.port);
 
             message::BlockchainErrorMessageResponse errorMessage =
                 message::BlockchainErrorMessageResponse::create(
-                    to, "Block was not stored (maybe duplicate)", block);
+                    to,
+                    "Block was not stored (maybe duplicate  or fork)",
+                    block.hash,
+                    message.getId());
             errorMessage.serialize(jMessage);
 
-            client.sendMessage(jMessage.dump());
+            errorMessageClient.sendMessage(jMessage.dump());
         }
     }
-    client.disconnect();
+    textMessageClient.disconnect();
 }
 
 void TCPClient::disconnect()

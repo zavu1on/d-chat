@@ -7,7 +7,8 @@ namespace message
 struct BlockchainErrorMessageResponsePayload
 {
     std::string error;
-    blockchain::Block block;
+    std::string blockHash;
+    std::string messageId;
 };
 
 class BlockchainErrorMessageResponse : public Message
@@ -21,7 +22,8 @@ public:
                                    const peer::UserPeer& from,
                                    uint64_t timestamp,
                                    const std::string& error,
-                                   const blockchain::Block& block);
+                                   const std::string& blockHash,
+                                   const std::string& messageId);
     BlockchainErrorMessageResponse(const json& jData);
 
     void serialize(json& jData) const override;
@@ -29,6 +31,7 @@ public:
 
     static BlockchainErrorMessageResponse create(const peer::UserPeer& from,
                                                  const std::string& error,
-                                                 const blockchain::Block& block);
+                                                 const std::string& blockHash,
+                                                 const std::string& messageId);
 };
 }  // namespace message
