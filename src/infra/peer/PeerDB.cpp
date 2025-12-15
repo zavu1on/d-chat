@@ -41,10 +41,8 @@ void PeerDB::addPeer(const UserPeer& peer)
                        });
 
     if (!found)
-    {
         db->executePrepared("INSERT INTO peers(host, port, public_key) VALUES (?,?,?);",
                             { peer.host, std::to_string(peer.port), peer.publicKey });
-    }
 }
 
 bool PeerDB::findPublicKeyByUserHost(const UserHost& host, std::string& publicKey)

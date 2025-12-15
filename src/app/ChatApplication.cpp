@@ -276,12 +276,12 @@ void ChatApplication::shutdown()
     client->disconnect();
     db->close();
 
-    running.store(false, std::memory_order_relaxed);
+    running.store(false, std::memory_order_release);
 }
 
 void ChatApplication::init()
 {
-    running.store(false, std::memory_order_relaxed);
+    running.store(false, std::memory_order_release);
 
     consoleUI = std::make_shared<ui::ConsoleUI>();
 
@@ -419,8 +419,8 @@ void ChatApplication::run()
                 consoleUI->printLog("[YOU] " + input + "\n");
         });
 
-    running.store(true, std::memory_order_relaxed);
-    while (running.load(std::memory_order_relaxed))
+    running.store(true, std::memory_order_release);
+    while (running.load(std::memory_order_acquire))
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }

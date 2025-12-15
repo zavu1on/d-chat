@@ -1,13 +1,11 @@
 #include "JsonConfig.hpp"
 
 #include <stdexcept>
-#include <utility>
 
 #include "SocketClient.hpp"
 
 namespace config
 {
-
 JsonConfig::JsonConfig(const std::string& path, const std::shared_ptr<crypto::ICrypto>& crypto)
     : jsonFile(path), crypto(crypto)
 {

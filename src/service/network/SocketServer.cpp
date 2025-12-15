@@ -66,7 +66,7 @@ SocketServer::SocketServer(u_short port)
     }
 
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
+    serverAddr.sin_port = htons(port);  // port number to TCP/IP format
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     // bind server address to socket

@@ -8,11 +8,11 @@
 #include <openssl/rand.h>
 #include <openssl/sha.h>
 
-#include <cstring>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
+
+#include "../utils/hex.hpp"
 
 namespace crypto
 {

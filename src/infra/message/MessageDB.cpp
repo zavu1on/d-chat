@@ -2,7 +2,6 @@
 
 namespace message
 {
-
 MessageDB::MessageDB(const std::shared_ptr<db::DBFile>& db,
                      const std::shared_ptr<config::IConfig>& config,
                      const std::shared_ptr<crypto::ICrypto>& crypto)

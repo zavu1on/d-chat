@@ -6,7 +6,6 @@
 
 namespace utils
 {
-
 inline std::string toHex(const std::vector<uint8_t>& data)
 {
     std::ostringstream oss;

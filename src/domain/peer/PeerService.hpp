@@ -14,7 +14,7 @@ class PeerService
 private:
     std::vector<UserHost> hosts;
     std::vector<UserPeer> peers;
-    mutable std::mutex mutex;  // allows call from const methods
+    mutable std::mutex mutex;
     std::shared_ptr<peer::IPeerRepo> peerRepo;
 
 public:

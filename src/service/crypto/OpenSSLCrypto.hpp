@@ -1,8 +1,8 @@
 #pragma once
 #include <openssl/evp.h>
 
-#include "../utils/hex.hpp"
 #include "ICrypto.hpp"
+
 
 namespace crypto
 {
