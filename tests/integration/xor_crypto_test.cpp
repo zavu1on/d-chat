@@ -1,11 +1,3 @@
-/**
- * @file xor_crypto_test.cpp
- * @brief Unit-тесты для класса XORCrypto
- *
- * XORCrypto — упрощённая реализация криптографии для демонстрационных целей.
- * НЕ является криптографически безопасной.
- */
-
 #include <gtest/gtest.h>
 
 #include "XORCrypto.hpp"
